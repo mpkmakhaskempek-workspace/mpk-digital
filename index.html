@@ -523,6 +523,20 @@ try{navigator.clipboard.writeText(ta.value).then(function(){s.textContent="Tersa
     <p id="pl-login-status" class="portal-note" role="status" aria-live="polite" style="margin:0"></p>
    </form>
    <p class="portal-note">Gunakan akun resmi. Jangan membagikan password kepada siapa pun.</p>
+   <div id="pl-reset-form" hidden style="margin-top:1.2rem;text-align:left">
+ <h3>Atur Password Baru</h3>
+ <p class="portal-note">Buat password baru untuk akun MPK Anda.</p>
+ <form id="pl-new-password-form" style="display:grid;gap:.8rem">
+  <label>Password Baru
+   <input id="pl-new-password" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Minimal 8 karakter" style="width:100%">
+  </label>
+  <label>Konfirmasi Password
+   <input id="pl-confirm-password" type="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Ulangi password baru" style="width:100%">
+  </label>
+  <button class="btn p" type="submit">Simpan Password Baru</button>
+  <p id="pl-reset-status" class="portal-note" role="status" aria-live="polite"></p>
+ </form>
+</div>
   </div>
   <div id="pl-app" class="pl-app" hidden>
    <nav id="pl-nav" class="glass pl-nav" aria-label="Menu portal"></nav>
