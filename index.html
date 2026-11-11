@@ -868,14 +868,34 @@ if(resetForm){
  const loginStatus=document.getElementById('pl-login-status');
  const loginButton=document.getElementById('pl-login-submit');
  function showLoginMessage(message,isError=true){loginStatus.textContent=message;loginStatus.style.color=isError?'#d9534f':'var(--mg)'}
- async function openMemberPortal(user){
-  if(!mpkSupabase)throw new Error('Kunci Publishable Supabase belum dipasang pada file website.');
-  const {data:profile,error}=await mpkSupabase.from('profiles').select('*').eq('id',user.id).single();
-  if(error||!profile||profile.aktif!==true)throw new Error('Profil anggota tidak aktif atau belum terhubung. Hubungi Super Admin.');
-  member={id:user.id,name:profile.nama||user.user_metadata?.nama||user.email||'Anggota MPK',className:profile.kelas||'—',position:profile.jabatan||'Anggota',period:'2026/2027',commission:profile.komisi||'—',division:profile.komisi||'—'};
-  login.hidden=true;app.hidden=false;
+  async function openMemberPortal(user){
+  const {data:profile,error}=await mpkSupabase
+    .from('profiles')
+    .select('*')
+    .eq('id',user.id)
+    .single();
+
+  if(error||!profile||profile.aktif!==true){
+    throw new Error('Profil anggota tidak aktif atau belum terhubung. Hubungi Super Admin.');
+  }
+  member={
+    id:user.id,
+    name:profile.nama||user.user_metadata?.nama||user.email||'Anggota MPK',
+    className:profile.kelas||'—',
+    position:profile.jabatan||'Anggota',
+    period:'2026/2027',
+    commission:profile.komisi||'—',
+    division:profile.komisi||'—',
+    unit:profile.unit||'putra',
+    role:profile.role||'anggota'
+      role:profile.role||'anggota'
+  };
+
+  login.hidden=true;
+  app.hidden=false;
   show(0);
- }
+}
+     
  if(loginForm)loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
   if(!mpkSupabase){showLoginMessage('Konfigurasi Publishable Key belum dilengkapi.');return;}
