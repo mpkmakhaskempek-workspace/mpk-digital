@@ -557,7 +557,8 @@ try{navigator.clipboard.writeText(ta.value).then(function(){s.textContent="Tersa
  let mpkSupabase=null;
  const SUPABASE_URL='https://scbvicptheolzeikjgta.supabase.co';
  const SUPABASE_PUBLISHABLE_KEY='sb_publishable_bru473egt2r8PeidPdSrTw_iJe6kcj4';
- if(window.supabase && SUPABASE_PUBLISHABLE_KEY){mpkSupabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});} 
+ if(window.supabase && SUPABASE_PUBLISHABLE_KEY){mpkSupabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});}
+ window.mpkSupabase = mpkSupabase;
  // PASSWORD RECOVERY MPK DIGITAL
 const resetBox=document.getElementById('pl-reset-form');
 const resetForm=document.getElementById('pl-new-password-form');
