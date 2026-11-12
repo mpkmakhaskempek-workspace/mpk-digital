@@ -590,7 +590,7 @@ if(recoveryButton){
       const {error}=await mpkSupabase.auth.resetPasswordForEmail(
         'mpkmakhaskempek@gmail.com',
         {
-          redirectTo:window.location.origin+'/#portal'
+          redirectTo:window.location.origin+'/?recovery=1'
         }
       );
 
