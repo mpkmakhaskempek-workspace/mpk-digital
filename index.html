@@ -523,6 +523,14 @@ try{navigator.clipboard.writeText(ta.value).then(function(){s.textContent="Tersa
     <p id="pl-login-status" class="portal-note" role="status" aria-live="polite" style="margin:0"></p>
    </form>
    <p class="portal-note">Gunakan akun resmi. Jangan membagikan password kepada siapa pun.</p>
+   
+<div style="margin-top:.8rem">
+  <button id="pl-forgot-password" class="btn" type="button">
+    Lupa Password? Kirim Tautan Pemulihan
+  </button>
+  <p id="pl-recovery-status" class="portal-note" role="status" aria-live="polite"></p>
+</div>
+
    <div id="pl-reset-form" hidden style="margin-top:1.2rem;text-align:left">
  <h3>Atur Password Baru</h3>
  <p class="portal-note">Buat password baru untuk akun MPK Anda.</p>
@@ -564,6 +572,39 @@ const resetBox=document.getElementById('pl-reset-form');
 const resetForm=document.getElementById('pl-new-password-form');
 const resetStatus=document.getElementById('pl-reset-status');
 const loginForm=document.getElementById('pl-login-form');
+ 
+const recoveryButton=document.getElementById('pl-forgot-password');
+const recoveryStatus=document.getElementById('pl-recovery-status');
+
+if(recoveryButton){
+  recoveryButton.addEventListener('click',async()=>{
+    if(!mpkSupabase){
+      recoveryStatus.textContent='Supabase belum terhubung.';
+      return;
+    }
+
+    recoveryButton.disabled=true;
+    recoveryStatus.textContent='Mengirim tautan pemulihan...';
+
+    try{
+      const {error}=await mpkSupabase.auth.resetPasswordForEmail(
+        'mpkmakhaskempek@gmail.com',
+        {
+          redirectTo:window.location.origin+'/#portal'
+        }
+      );
+
+      if(error) throw error;
+
+      recoveryStatus.textContent='Tautan pemulihan telah diminta. Periksa email Super Admin.';
+    }catch(error){
+      recoveryStatus.textContent='Gagal mengirim tautan: '+error.message;
+    }finally{
+      recoveryButton.disabled=false;
+    }
+  });
+}
+
 
 if(mpkSupabase){
   mpkSupabase.auth.onAuthStateChange((event,session)=>{
