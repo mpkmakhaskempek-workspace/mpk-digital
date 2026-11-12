@@ -864,7 +864,6 @@ if(resetForm){
   if(i===11){document.getElementById('clear-local').addEventListener('click',()=>{set('tasks',[]);set('aspirations',[]);document.getElementById('settings-feedback').textContent='Data tugas dan draft aspirasi lokal telah dibersihkan.'})}
  }
  menu.forEach((name,i)=>{const b=document.createElement('button');b.type='button';b.textContent=name;b.addEventListener('click',()=>show(i));nav.appendChild(b)});
- const loginForm=document.getElementById('pl-login-form');
  const loginStatus=document.getElementById('pl-login-status');
  const loginButton=document.getElementById('pl-login-submit');
  function showLoginMessage(message,isError=true){loginStatus.textContent=message;loginStatus.style.color=isError?'#d9534f':'var(--mg)'}
