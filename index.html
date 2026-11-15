@@ -523,14 +523,6 @@ try{navigator.clipboard.writeText(ta.value).then(function(){s.textContent="Tersa
     <p id="pl-login-status" class="portal-note" role="status" aria-live="polite" style="margin:0"></p>
    </form>
    <p class="portal-note">Gunakan akun resmi. Jangan membagikan password kepada siapa pun.</p>
-   
-<div style="margin-top:.8rem">
-  <button id="pl-forgot-password" class="btn" type="button">
-    Lupa Password? Kirim Tautan Pemulihan
-  </button>
-  <p id="pl-recovery-status" class="portal-note" role="status" aria-live="polite"></p>
-</div>
-
    <div id="pl-reset-form" hidden style="margin-top:1.2rem;text-align:left">
  <h3>Atur Password Baru</h3>
  <p class="portal-note">Buat password baru untuk akun MPK Anda.</p>
@@ -552,7 +544,7 @@ try{navigator.clipboard.writeText(ta.value).then(function(){s.textContent="Tersa
   </div>
  </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.80.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
 (function(){
@@ -565,51 +557,18 @@ try{navigator.clipboard.writeText(ta.value).then(function(){s.textContent="Tersa
  let mpkSupabase=null;
  const SUPABASE_URL='https://scbvicptheolzeikjgta.supabase.co';
  const SUPABASE_PUBLISHABLE_KEY='sb_publishable_bru473egt2r8PeidPdSrTw_iJe6kcj4';
- if(window.supabase && SUPABASE_PUBLISHABLE_KEY){mpkSupabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});}
- window.mpkSupabase = mpkSupabase;
+ if(window.supabase && SUPABASE_PUBLISHABLE_KEY){mpkSupabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});} 
+ window.mpkSupabase=mpkSupabase;
  // PASSWORD RECOVERY MPK DIGITAL
 const resetBox=document.getElementById('pl-reset-form');
 const resetForm=document.getElementById('pl-new-password-form');
 const resetStatus=document.getElementById('pl-reset-status');
-const loginForm=document.getElementById('pl-login-form');
- 
-const recoveryButton=document.getElementById('pl-forgot-password');
-const recoveryStatus=document.getElementById('pl-recovery-status');
-
-if(recoveryButton){
-  recoveryButton.addEventListener('click',async()=>{
-    if(!mpkSupabase){
-      recoveryStatus.textContent='Supabase belum terhubung.';
-      return;
-    }
-
-    recoveryButton.disabled=true;
-    recoveryStatus.textContent='Mengirim tautan pemulihan...';
-
-    try{
-      const {error}=await mpkSupabase.auth.resetPasswordForEmail(
-        'mpkmakhaskempek@gmail.com',
-        {
-          redirectTo:window.location.origin+'/?recovery=1'
-        }
-      );
-
-      if(error) throw error;
-
-      recoveryStatus.textContent='Tautan pemulihan telah diminta. Periksa email Super Admin.';
-    }catch(error){
-      recoveryStatus.textContent='Gagal mengirim tautan: '+error.message;
-    }finally{
-      recoveryButton.disabled=false;
-    }
-  });
-}
-
+const loginFormForRecovery=document.getElementById('pl-login-form');
 
 if(mpkSupabase){
   mpkSupabase.auth.onAuthStateChange((event,session)=>{
     if(event==='PASSWORD_RECOVERY' && session){
-      loginForm.hidden=true;
+      loginFormForRecovery.hidden=true;
       resetBox.hidden=false;
       resetStatus.textContent='Silakan buat password baru.';
     }
@@ -838,51 +797,59 @@ if(resetForm){
   pwa.onclick=()=>{if(window.__pwa){window.__pwa.prompt();window.__pwa=null}else ps.textContent=matchMedia('(display-mode: standalone)').matches?'Portal sudah dibuka sebagai aplikasi.':'Tombol pasang otomatis belum tersedia. Ikuti petunjuk di bawah (perlu dibuka lewat https).'};
   upd();drawL()}
 
- /* 5. Kelola Mading (Mini CMS + audit trail) */
- let mdRole=get('mading_role','Admin MPK');
- const audit=(aksi,judul)=>{const a=get('mading_audit',[]);a.unshift({t:new Date().toISOString(),who:member.name+' · '+mdRole,aksi,judul});set('mading_audit',a.slice(0,100))};
- const mdSave=a=>{const ok=MD.save(a);if(ok)MD.render();return ok};
- const readURL=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f)});
- const bannerOf=f=>new Promise((res,rej)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const W=1000,H=420,c=document.createElement('canvas');c.width=W;c.height=H;const k=Math.max(W/im.width,H/im.height),w=im.width*k,h=im.height*k;c.getContext('2d').drawImage(im,(W-w)/2,(H-h)/2,w,h);URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',.72))};im.onerror=rej;im.src=u});
- views.push(()=>head('Kelola Mading','Perbarui mading tanpa menyentuh kode: tulis, unggah banner dan dokumen, lalu terbitkan.')+
-  card('Peran (simulasi)',`<label>Masuk sebagai <select id="md-role"><option>Admin MPK</option><option>Pembina</option></select></label><p class="portal-note">Admin MPK menerbitkan pengumuman dan event. Aspirasi menunggu persetujuan Pembina sebelum tampil di mading. Pada versi resmi, peran ditentukan oleh akun login.</p>`)+
-  card('Tulis / ubah konten',`<form id="md-form" class="frm"><input type="hidden" name="id"><label>Judul<input name="judul" required maxlength="100"></label><label>Jenis<select name="jenis"><option>Pengumuman</option><option>Event</option><option>Aspirasi</option><option>Artikel Literasi</option></select></label><label>Kategori<select name="kat" id="md-kat"></select></label><label>Tanggal<input name="tgl" type="date"></label><label class="full">Isi / naskah artikel<textarea name="isi" rows="8" maxlength="12000" placeholder="Untuk Ruang Aksara, tuliskan isi artikel atau ringkasan karya di sini…"></textarea></label><label>Banner (gambar)<input name="img" type="file" accept="image/*"></label><label>Lampiran PDF/Word (maks. 600 KB)<input name="file" type="file" accept=".pdf,.doc,.docx"></label><label class="chk full"><input name="doc" type="checkbox"> Dokumen resmi (tampil di Pusat Unduhan)</label><label class="chk full"><input name="hero" type="checkbox"> Tampilkan di slide utama</label><div class="full"><button class="btn p" data-mode="terbit" type="submit">Terbitkan</button> <button class="btn" data-mode="draf" type="submit">Simpan sebagai draf</button> <button class="btn" id="md-cancel" type="button" hidden>Batal ubah</button> <span id="md-st" role="status" style="color:var(--mg)"></span></div></form>`)+
+ /* 5. Kelola Mading — Supabase Database + Storage */
+ const audit=(aksi,judul)=>{const a=get('mading_audit',[]);a.unshift({t:new Date().toISOString(),who:member.name,aksi,judul});set('mading_audit',a.slice(0,100))};
+ const bannerBlob=f=>new Promise((res,rej)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const W=1000,H=420,c=document.createElement('canvas');c.width=W;c.height=H;const k=Math.max(W/im.width,H/im.height),w=im.width*k,h=im.height*k;c.getContext('2d').drawImage(im,(W-w)/2,(H-h)/2,w,h);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error('Gagal memproses banner.')),'image/jpeg',.82)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('Gambar tidak bisa dibaca.'))};im.src=u});
+ const madingStorage=()=>mpkSupabase.storage.from('mading-digital');
+ const uploadMadingFile=async(path,file,contentType)=>{const {error}=await madingStorage().upload(path,file,{contentType,upsert:false,cacheControl:'3600'});if(error)throw error;return path};
+ const removeMadingFiles=async paths=>{const clean=paths.filter(Boolean);if(clean.length){const {error}=await madingStorage().remove(clean);if(error)console.warn('Gagal menghapus file Mading:',error.message)}};
+ views.push(()=>head('Kelola Mading','Kelola publikasi Mading Digital. Hak akses mengikuti akun dan kebijakan Supabase.')+
+  card('Tulis / ubah konten',`<form id="md-form" class="frm"><input type="hidden" name="id"><label>Judul<input name="judul" required maxlength="100"></label><label>Jenis<select name="jenis"><option>Pengumuman</option><option>Event</option><option>Aspirasi</option><option>Artikel Literasi</option></select></label><label>Kategori<input name="kat" required maxlength="60" list="md-category-options" placeholder="Contoh: Internal MPK"><datalist id="md-category-options"></datalist></label><label>Tanggal<input name="tgl" type="date"></label><label class="full">Isi / naskah artikel<textarea name="isi" rows="8" maxlength="12000" placeholder="Tuliskan isi artikel atau ringkasan karya di sini…"></textarea></label><label>Banner (gambar)<input name="img" type="file" accept="image/jpeg,image/png,image/webp"></label><label>Lampiran PDF (maks. 10 MB)<input name="file" type="file" accept="application/pdf,.pdf"></label><label class="chk full"><input name="doc" type="checkbox"> Dokumen resmi (tampil di Pusat Unduhan)</label><label class="chk full"><input name="hero" type="checkbox"> Tampilkan di slide utama</label><div class="full"><button class="btn p" data-mode="terbit" type="submit">Terbitkan</button> <button class="btn" data-mode="draf" type="submit">Simpan sebagai draf</button> <button class="btn" id="md-cancel" type="button" hidden>Batal ubah</button> <span id="md-st" role="status" style="color:var(--mg)"></span></div></form><p class="portal-note">Banner akan diproses menjadi JPEG. Lampiran saat ini dibatasi PDF sesuai konfigurasi bucket Storage.</p>`)+
   card('Daftar konten','<div id="md-list"></div>')+
-  card('Catat ke linimasa publik',`<form id="md-tlform" class="portal-toolbar"><input name="x" placeholder="Contoh: Rapat Pleno Triwulan selesai dilaksanakan" maxlength="140" required style="flex:1;min-width:220px"><button class="btn" type="submit">Tambah</button></form>`)+
-  card('Kategori informasi','<div id="md-catbox"></div>')+
-  card('Audit trail (siapa menerbitkan, mengubah, menghapus)','<div id="md-audit"></div>')+
-  '<p class="portal-note">Prototipe: data tersimpan di browser ini. Agar mading ikut berubah di HP semua siswa tanpa refresh, data perlu dipindah ke Supabase/Firebase (lihat berkas mading-supabase-schema.sql). Antar tab di browser yang sama, mading sudah memperbarui diri otomatis.</p>');
- function bindMading(){const form=main.querySelector('#md-form'),list=main.querySelector('#md-list'),st=main.querySelector('#md-st'),kat=main.querySelector('#md-kat'),role=main.querySelector('#md-role'),items=()=>MD.load();role.value=mdRole;
-  const stCls={terbit:'st2',menunggu:'st1',draf:''};
-  function drawKat(){kat.innerHTML=MD.cats().map(c=>`<option>${esc(c)}</option>`).join('')}
-  function drawCats(){const used=new Set(items().map(x=>x.kat));main.querySelector('#md-catbox').innerHTML=`<div class="btns">${MD.cats().map(c=>`<span class="tag">${esc(c)}${used.has(c)?'':` <a href="#" data-rmcat="${esc(c)}" aria-label="Hapus kategori ${esc(c)}">×</a>`}</span>`).join('')}</div><form id="md-catform" class="portal-toolbar" style="margin-top:.8rem"><input name="c" placeholder="Kategori baru" maxlength="30" required><button class="btn" type="submit">Tambah</button></form><p class="portal-note">Kategori yang sedang dipakai konten tidak bisa dihapus.</p>`}
-  function drawAudit(){const a=get('mading_audit',[]);main.querySelector('#md-audit').innerHTML=a.length?a.slice(0,25).map(x=>row(x.aksi+': '+x.judul,fmtT(x.t)+' · '+x.who)).join(''):empty('Belum ada aktivitas admin tercatat.')}
+  card('Catat ke linimasa publik',`<form id="md-tlform" class="portal-toolbar"><input name="x" placeholder="Contoh: Rapat Pleno Triwulan selesai dilaksanakan" maxlength="140" required style="flex:1;min-width:220px"><button class="btn" type="submit">Tambah</button></form><p class="portal-note">Linimasa masih tersimpan lokal di perangkat pengelola; sinkronisasi lintas perangkat memerlukan tabel tersendiri.</p>`)+
+  card('Riwayat aktivitas pengelola','<div id="md-audit"></div><p class="portal-note">Riwayat ini masih lokal pada perangkat pengelola, bukan audit log server.</p>')+
+  '<p class="portal-note">Konten, status publikasi, banner, dan lampiran tersimpan di Supabase. Perubahan hak akses tetap diverifikasi oleh RLS.</p>');
+ async function bindMading(){
+  const form=main.querySelector('#md-form'),list=main.querySelector('#md-list'),st=main.querySelector('#md-st'),cats=main.querySelector('#md-category-options'),items=()=>MD.load();
+  const {data:allowed,error:accessError}=await mpkSupabase.rpc('can_manage_mading');
+  if(accessError||allowed!==true){list.innerHTML=empty('Akun ini tidak memiliki izin untuk mengelola Mading.');form.closest('.glass').hidden=true;return}
+  const stCls={terbit:'st2',draf:''};
+  async function refresh(){st.textContent='Memuat data Mading…';const {data,error}=await mpkSupabase.from('mading_posts').select('*').order('created_at',{ascending:false});if(error){st.textContent='Gagal memuat Mading: '+error.message;return false}await MD.setRows(data||[]);st.textContent='';return true}
+  function drawCats(){cats.innerHTML=MD.cats().map(c=>`<option value="${esc(c)}"></option>`).join('')}
+  function drawAudit(){const a=get('mading_audit',[]);main.querySelector('#md-audit').innerHTML=a.length?a.slice(0,25).map(x=>row(x.aksi+': '+x.judul,fmtT(x.t)+' · '+x.who)).join(''):empty('Belum ada aktivitas pengelola tercatat pada perangkat ini.')}
   function drawList(){const L=items().slice().sort((a,b)=>String(b.u||b.t||'').localeCompare(String(a.u||a.t||'')));
-   list.innerHTML=L.length?L.map(x=>`<div class="rowi" style="align-items:flex-start;gap:.6rem;flex-wrap:wrap"><span><b>${esc(x.judul)}</b><br>${esc(x.jenis)} · ${esc(x.kat)} · ${esc(x.tgl)}${x.hero?' · slide utama':''}${x.doc?' · dokumen':''}${x.file?' · 📎':''}</span><span style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center"><span class="pill ${stCls[x.status]||''}">${x.status}</span><button class="btn up" data-a="edit" data-id="${x.id}" type="button">Ubah</button>${x.status==='terbit'?`<button class="btn up" data-a="hide" data-id="${x.id}" type="button">Sembunyikan</button>`:x.status==='draf'?`<button class="btn up" data-a="pub" data-id="${x.id}" type="button">Terbitkan</button>`:(mdRole==='Pembina'?`<button class="btn up" data-a="ok" data-id="${x.id}" type="button">Setujui</button>`:'')}<button class="btn up" data-a="del" data-id="${x.id}" type="button">Hapus</button></span></div>`).join(''):empty('Belum ada konten.')}
-  function all(){drawKat();drawCats();drawAudit();drawList()}
+   list.innerHTML=L.length?L.map(x=>`<div class="rowi" style="align-items:flex-start;gap:.6rem;flex-wrap:wrap"><span><b>${esc(x.judul)}</b><br>${esc(x.jenis)} · ${esc(x.kat)} · ${esc(x.tgl)}${x.hero?' · slide utama':''}${x.doc?' · dokumen resmi':''}${x.file?' · 📎 PDF':''}</span><span style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center"><span class="pill ${stCls[x.status]||''}">${esc(x.status)}</span><button class="btn up" data-a="edit" data-id="${x.id}" type="button">Ubah</button>${x.status==='terbit'?`<button class="btn up" data-a="hide" data-id="${x.id}" type="button">Sembunyikan</button>`:`<button class="btn up" data-a="pub" data-id="${x.id}" type="button">Terbitkan</button>`}<button class="btn up" data-a="del" data-id="${x.id}" type="button">Hapus</button></span></div>`).join(''):empty('Belum ada konten Mading.');}
+  function all(){drawCats();drawAudit();drawList()}
   const goPub=x=>{MD.tl(x.jenis+': '+x.judul,x.kat);if(x.hero)notify('Mading diperbarui',x.judul)};
-  role.addEventListener('change',()=>{mdRole=role.value;set('mading_role',mdRole);drawList()});
-  list.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const L=items(),x=L.find(i=>i.id===b.dataset.id);if(!x)return;const a=b.dataset.a;
-   if(a==='edit'){form.id.value=x.id;form.judul.value=x.judul;form.jenis.value=x.jenis;form.kat.value=x.kat;form.tgl.value=x.tgl||'';form.isi.value=x.isi||'';form.doc.checked=!!x.doc;form.hero.checked=!!x.hero;main.querySelector('#md-cancel').hidden=false;st.textContent='Mengubah: '+x.judul+' (pilih banner/lampiran baru hanya jika ingin menggantinya).';form.scrollIntoView({behavior:'smooth',block:'center'});return}
-   if(a==='del'){if(!confirm('Hapus konten ini dari mading?'))return;mdSave(L.filter(i=>i.id!==x.id));audit('Menghapus',x.judul)}
-   else if(a==='hide'){x.status='draf';x.u=new Date().toISOString();mdSave(L);audit('Menyembunyikan',x.judul)}
-   else if(a==='pub'){x.status=(x.jenis==='Aspirasi'&&mdRole!=='Pembina')?'menunggu':'terbit';x.u=new Date().toISOString();mdSave(L);audit(x.status==='terbit'?'Menerbitkan':'Mengajukan persetujuan',x.judul);if(x.status==='terbit')goPub(x)}
-   else if(a==='ok'&&mdRole==='Pembina'){x.status='terbit';x.u=new Date().toISOString();mdSave(L);audit('Menyetujui',x.judul);goPub(x)}
-   all()});
+  list.addEventListener('click',async e=>{const b=e.target.closest('[data-a]');if(!b)return;const x=items().find(i=>String(i.id)===b.dataset.id);if(!x)return;const a=b.dataset.a;b.disabled=true;
+   try{
+    if(a==='edit'){form.elements.id.value=x.id;form.elements.judul.value=x.judul;form.elements.jenis.value=x.jenis;form.elements.kat.value=x.kat;form.elements.tgl.value=x.tgl||'';form.elements.isi.value=x.isi||'';form.elements.doc.checked=!!x.doc;form.elements.hero.checked=!!x.hero;main.querySelector('#md-cancel').hidden=false;st.textContent='Mengubah: '+x.judul+' (unggah file baru hanya jika ingin mengganti file lama).';form.scrollIntoView({behavior:'smooth',block:'center'});return}
+    if(a==='del'){if(!confirm('Hapus konten ini beserta file Mading yang terhubung?'))return;const {error}=await mpkSupabase.from('mading_posts').delete().eq('id',x.id);if(error)throw error;await removeMadingFiles([x.bannerPath,x.attachmentPath]);audit('Menghapus',x.judul)}
+    else if(a==='hide'){const {error}=await mpkSupabase.from('mading_posts').update({status:'draf',published_at:null}).eq('id',x.id);if(error)throw error;audit('Menyembunyikan',x.judul)}
+    else if(a==='pub'){const now=new Date().toISOString();const {error}=await mpkSupabase.from('mading_posts').update({status:'terbit',published_at:now}).eq('id',x.id);if(error)throw error;audit('Menerbitkan',x.judul);goPub(x)}
+    await refresh();all();MD.render();
+   }catch(err){st.textContent='Gagal memproses konten: '+(err.message||'Kesalahan tidak diketahui.')}finally{b.disabled=false}
+  });
   main.querySelector('#md-cancel').onclick=()=>show(18);
-  form.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(form),mode=(e.submitter&&e.submitter.dataset.mode)||'terbit',imgF=f.get('img'),fileF=f.get('file');st.textContent='';let img=null,file=null;
-   try{if(imgF&&imgF.size)img=await bannerOf(imgF);if(fileF&&fileF.size){if(fileF.size>614400){st.textContent='Lampiran maksimal 600 KB.';return}file={name:fileF.name,data:await readURL(fileF)}}}catch(x){st.textContent='File tidak bisa dibaca.';return}
-   const A=items(),id=f.get('id'),old=A.find(x=>x.id===id),now=new Date().toISOString();
-   const rec=Object.assign({},old||{id:uid(),by:member.name,t:now},{judul:String(f.get('judul')).trim(),jenis:f.get('jenis'),kat:f.get('kat'),tgl:f.get('tgl')||now.slice(0,10),isi:String(f.get('isi')||'').trim(),doc:!!f.get('doc'),hero:!!f.get('hero'),u:now});
-   if(img!==null)rec.img=img;if(file)rec.file=file;
-   rec.status=mode==='draf'?'draf':((rec.jenis==='Aspirasi'&&mdRole!=='Pembina')?'menunggu':'terbit');
-   if(!mdSave(old?A.map(x=>x.id===id?rec:x):[rec,...A])){st.textContent='Penyimpanan browser penuh. Perkecil gambar/lampiran atau hapus konten lama.';return}
-   audit(old?'Mengubah':(rec.status==='draf'?'Menyimpan draf':rec.status==='menunggu'?'Mengajukan persetujuan':'Menerbitkan'),rec.judul);
-   if(rec.status==='terbit'&&!(old&&old.status==='terbit'))goPub(rec);show(18)});
+  form.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(form),mode=(e.submitter&&e.submitter.dataset.mode)||'terbit',imgF=f.get('img'),fileF=f.get('file');st.textContent='Menyimpan ke Supabase…';const submitters=form.querySelectorAll('button[type="submit"]');submitters.forEach(b=>b.disabled=true);
+   let newBanner=null,newAttachment=null,old=null;
+   try{
+    const id=String(f.get('id')||crypto.randomUUID()),existing=items().find(x=>String(x.id)===id);old=existing||null;
+    if(imgF&&imgF.size){const blob=await bannerBlob(imgF);newBanner=member.id+'/'+id+'/banner-'+Date.now()+'.jpg';await uploadMadingFile(newBanner,blob,'image/jpeg')}
+    if(fileF&&fileF.size){if(fileF.size>10*1024*1024)throw new Error('Lampiran maksimal 10 MB.');if(fileF.type!=='application/pdf'&&!/\.pdf$/i.test(fileF.name))throw new Error('Bucket saat ini hanya menerima lampiran PDF.');newAttachment=member.id+'/'+id+'/attachment-'+Date.now()+'.pdf';await uploadMadingFile(newAttachment,fileF,'application/pdf')}
+    const now=new Date().toISOString(),payload={judul:String(f.get('judul')||'').trim(),jenis:String(f.get('jenis')||'Pengumuman'),kategori:String(f.get('kat')||'').trim(),isi:String(f.get('isi')||'').trim(),tanggal:f.get('tgl')||now.slice(0,10),status:mode==='draf'?'draf':'terbit',is_featured:!!f.get('hero'),is_document:!!f.get('doc'),updated_at:now};
+    if(newBanner)payload.banner_path=newBanner;else if(!old)payload.banner_path=null;
+    if(newAttachment){payload.attachment_path=newAttachment;payload.attachment_name=fileF.name;payload.attachment_mime='application/pdf';payload.attachment_size=fileF.size}else if(!old){payload.attachment_path=null;payload.attachment_name=null;payload.attachment_mime=null;payload.attachment_size=null}
+    if(!old){payload.created_by=member.id;payload.published_at=mode==='terbit'?now:null;const {error}=await mpkSupabase.from('mading_posts').insert(payload);if(error)throw error}
+    else{if(mode==='terbit'&&old.status!=='terbit')payload.published_at=now;else if(mode==='draf')payload.published_at=null;const {error}=await mpkSupabase.from('mading_posts').update(payload).eq('id',id);if(error)throw error}
+    if(old){const obsolete=[];if(newBanner&&old.bannerPath)obsolete.push(old.bannerPath);if(newAttachment&&old.attachmentPath)obsolete.push(old.attachmentPath);await removeMadingFiles(obsolete)}
+    audit(old?'Mengubah':(mode==='draf'?'Menyimpan draf':'Menerbitkan'),payload.judul);if(mode==='terbit'&&(!old||old.status!=='terbit'))goPub({judul:payload.judul,jenis:payload.jenis,kat:payload.kategori,hero:payload.is_featured});
+    await refresh();all();MD.render();form.reset();form.elements.id.value='';main.querySelector('#md-cancel').hidden=true;st.textContent='Berhasil disimpan di Supabase.';
+   }catch(err){if(newBanner||newAttachment)await removeMadingFiles([newBanner,newAttachment]);st.textContent='Gagal menyimpan: '+(err.message||'Kesalahan tidak diketahui.')}finally{submitters.forEach(b=>b.disabled=false)}
+  });
   main.querySelector('#md-tlform').addEventListener('submit',e=>{e.preventDefault();const t=String(new FormData(e.target).get('x')).trim();if(!t)return;MD.tl(t,'Kegiatan');audit('Menambah linimasa',t);MD.render();e.target.reset();drawAudit()});
-  main.querySelector('#md-catbox').addEventListener('click',e=>{const r=e.target.closest('[data-rmcat]');if(!r)return;e.preventDefault();MD.saveCats(MD.cats().filter(c=>c!==r.dataset.rmcat));audit('Menghapus kategori',r.dataset.rmcat);MD.render();all()});
-  main.querySelector('#md-catbox').addEventListener('submit',e=>{e.preventDefault();const c=String(new FormData(e.target).get('c')).trim(),C=MD.cats();if(c&&!C.includes(c)){MD.saveCats([...C,c]);audit('Menambah kategori',c);MD.render()}all()});
-  all()}
+  if(await refresh())all();
+ }
  function show(i){clearInterval(carT);Array.from(nav.children).forEach((b,k)=>b.classList.toggle('on',k===i));main.innerHTML=views[i]();bindPage(i);badge()}
  function bindPage(i){
   if(i===14)bindInfo();if(i===15)bindKD();if(i===16)bindVote();if(i===17)bindNotif();if(i===18)bindMading();
@@ -905,36 +872,20 @@ if(resetForm){
   if(i===11){document.getElementById('clear-local').addEventListener('click',()=>{set('tasks',[]);set('aspirations',[]);document.getElementById('settings-feedback').textContent='Data tugas dan draft aspirasi lokal telah dibersihkan.'})}
  }
  menu.forEach((name,i)=>{const b=document.createElement('button');b.type='button';b.textContent=name;b.addEventListener('click',()=>show(i));nav.appendChild(b)});
+ const loginForm=document.getElementById('pl-login-form');
  const loginStatus=document.getElementById('pl-login-status');
  const loginButton=document.getElementById('pl-login-submit');
  function showLoginMessage(message,isError=true){loginStatus.textContent=message;loginStatus.style.color=isError?'#d9534f':'var(--mg)'}
-  async function openMemberPortal(user){
-  const {data:profile,error}=await mpkSupabase
-    .from('profiles')
-    .select('*')
-    .eq('id',user.id)
-    .single();
-
-  if(error||!profile||profile.aktif!==true){
-    throw new Error('Profil anggota tidak aktif atau belum terhubung. Hubungi Super Admin.');
-  }
-  member={
-    id:user.id,
-    name:profile.nama||user.user_metadata?.nama||user.email||'Anggota MPK',
-    className:profile.kelas||'—',
-    position:profile.jabatan||'Anggota',
-    period:'2026/2027',
-    commission:profile.komisi||'—',
-    division:profile.komisi||'—',
-   unit:profile.unit||'putra',
-role:profile.role||'anggota'
-  };
-
-  login.hidden=true;
-  app.hidden=false;
+ async function openMemberPortal(user){
+  if(!mpkSupabase)throw new Error('Kunci Publishable Supabase belum dipasang pada file website.');
+  const {data:profile,error}=await mpkSupabase.from('profiles').select('*').eq('id',user.id).single();
+  if(error||!profile||profile.aktif!==true)throw new Error('Profil anggota tidak aktif atau belum terhubung. Hubungi Super Admin.');
+  member={id:user.id,name:profile.nama||user.user_metadata?.nama||user.email||'Anggota MPK',className:profile.kelas||'—',position:profile.jabatan||'Anggota',period:'2026/2027',commission:profile.komisi||'—',division:profile.komisi||'—'};
+  const {data:canManageMading,error:madingAccessError}=await mpkSupabase.rpc('can_manage_mading');
+  const madingNav=nav.children[18];if(madingNav)madingNav.hidden=!!madingAccessError||canManageMading!==true;
+  login.hidden=true;app.hidden=false;
   show(0);
-}
-     
+ }
  if(loginForm)loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
   if(!mpkSupabase){showLoginMessage('Konfigurasi Publishable Key belum dilengkapi.');return;}
@@ -1009,57 +960,42 @@ addEventListener('hashchange',fromHash);render();fromHash();
 </script>
 <script>
 (function(){
-var KEY='mpk26_mading',CK='mpk26_mading_cats',TK='mpk26_mading_tl',today=new Date().toISOString().slice(0,10);
-var SEED=[{id:'seed',judul:'Selamat datang di Mading Digital MPK',jenis:'Pengumuman',kat:'Internal MPK',isi:'Mading Digital menampilkan pengumuman, event, dan dokumen resmi MPK MA KHAS Kempek.\nPengurus MPK dapat memperbarui mading lewat menu Kelola Mading di portal anggota, tanpa menyentuh kode.',tgl:today,hero:true,doc:false,status:'terbit',by:'Sistem',img:'',file:null}];
+var TK='mpk26_mading_tl',today=new Date().toISOString().slice(0,10),cache=[],sup=window.mpkSupabase;
 function ld(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(x){return d}}
-function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(x){return false}}
-var bc=null;try{bc=new BroadcastChannel('mpk-mading')}catch(x){}
-function ping(){try{bc&&bc.postMessage('u')}catch(x){}}
 function e(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-function items(){return ld(KEY,SEED)}
-function pubs(){return items().filter(function(x){return x.status==='terbit'}).sort(function(a,b){return String(b.tgl).localeCompare(String(a.tgl))||String(b.u||b.t||'').localeCompare(String(a.u||a.t||''))})}
 function fmtD(t){try{return new Date(t+'T00:00').toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}catch(x){return t}}
 function fmtT(t){try{return new Date(t).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}catch(x){return t}}
 var EMO={Pengumuman:'📢',Event:'🎉',Aspirasi:'💬','Artikel Literasi':'📚'},BG={Pengumuman:'linear-gradient(135deg,#0F7A57,#064E3B)',Event:'linear-gradient(135deg,#C99A2E,#0B5D43)',Aspirasi:'linear-gradient(135deg,#1c6b73,#064E3B)','Artikel Literasi':'linear-gradient(135deg,#245B49,#102F28)'};
-var bgOf=function(x){return x.img?'background-image:url('+x.img+')':'background:'+(BG[x.jenis]||BG.Pengumuman)};
-window.MD={load:items,save:function(a){var ok=sv(KEY,a);if(ok)ping();return ok},cats:function(){return ld(CK,['Akademik','Kesiswaan/Event','Internal MPK','Literasi'])},saveCats:function(c){var ok=sv(CK,c);if(ok)ping();return ok},
-tl:function(x,k){var a=ld(TK,[]);a.unshift({t:new Date().toISOString(),x:x,k:k||''});sv(TK,a.slice(0,40));ping()},render:function(){render()}};
+var bgOf=function(x){return x.img?'background-image:url("'+String(x.img).replace(/"/g,'%22')+'")':'background:'+(BG[x.jenis]||BG.Pengumuman)};
+async function signed(path){if(!path||!sup)return '';try{var r=await sup.storage.from('mading-digital').createSignedUrl(path,3600);return r.error?'':r.data.signedUrl}catch(x){return ''}}
+function mapRow(r,urls){return {id:r.id,judul:r.judul,jenis:r.jenis,kat:r.kategori,isi:r.isi,tgl:r.tanggal,status:r.status,hero:r.is_featured,doc:r.is_document,img:urls.banner||'',file:r.attachment_path?{name:r.attachment_name||'Lampiran.pdf',mime:r.attachment_mime||'application/pdf',size:r.attachment_size||0,data:urls.attachment||'',path:r.attachment_path}:null,bannerPath:r.banner_path||null,attachmentPath:r.attachment_path||null,by:'MPK',t:r.created_at,u:r.updated_at,published_at:r.published_at};}
+async function fetchRows(includeDrafts){if(!sup){cache=[];return []}var q=sup.from('mading_posts').select('*').order('tanggal',{ascending:false}).order('created_at',{ascending:false});if(!includeDrafts)q=q.eq('status','terbit');var r=await q;if(r.error)throw r.error;var rows=await Promise.all((r.data||[]).map(async x=>{var urls={};[urls.banner,urls.attachment]=await Promise.all([signed(x.banner_path),signed(x.attachment_path)]);return mapRow(x,urls)}));cache=rows;return cache}
+function items(){return cache}
+function pubs(){return items().filter(function(x){return x.status==='terbit'}).sort(function(a,b){return String(b.tgl).localeCompare(String(a.tgl))||String(b.u||b.t||'').localeCompare(String(a.u||a.t||''))})}
+window.MD={load:items,setRows:async function(rows){cache=await Promise.all((rows||[]).map(async x=>{var urls={};[urls.banner,urls.attachment]=await Promise.all([signed(x.banner_path),signed(x.attachment_path)]);return mapRow(x,urls)}));return cache},reload:fetchRows,cats:function(){var a=['Akademik','Kesiswaan/Event','Internal MPK','Literasi'];items().forEach(x=>{if(x.kat&&!a.includes(x.kat))a.push(x.kat)});return a},tl:function(x,k){var a=ld(TK,[]);a.unshift({t:new Date().toISOString(),x:x,k:k||''});try{localStorage.setItem(TK,JSON.stringify(a.slice(0,40)))}catch(z){}render()},render:function(){render()}};
 var hero=document.getElementById('md-hero');if(!hero)return;
 var docs=document.getElementById('md-docs'),tabs=document.getElementById('md-tabs'),grid=document.getElementById('md-grid'),tlb=document.getElementById('md-tl'),dlg=document.getElementById('md-dlg'),q='',cat='Semua',hi=0,ht=0;
 function heroSlides(){return pubs().filter(function(x){return x.hero}).slice(0,5)}
-function drawHero(){var L=heroSlides();if(!L.length){hero.innerHTML='<div class="mds on" style="background:'+BG.Pengumuman+'"><h3>Mading Digital MPK</h3><p>Belum ada informasi utama.</p></div>';return}
-if(hi>=L.length)hi=0;
-hero.innerHTML=L.map(function(x,i){return '<div class="mds'+(i===hi?' on':'')+'" data-id="'+x.id+'" style="'+bgOf(x)+'" role="group" aria-label="Slide '+(i+1)+'"><span class="emo">'+(x.img?'':EMO[x.jenis]||'📢')+'</span><span class="tag">'+e(x.jenis)+' · '+e(x.kat)+'</span><h3>'+e(x.judul)+'</h3><p>'+e(String(x.isi||'').slice(0,130))+(String(x.isi||'').length>130?'…':'')+'</p><b class="pkgo">Baca selengkapnya →</b></div>'}).join('')+(L.length>1?'<div class="mdn"><button type="button" class="btn" data-go="-1" aria-label="Sebelumnya">‹</button><button type="button" class="btn" data-go="1" aria-label="Berikutnya">›</button></div><div class="mdd">'+L.map(function(x,i){return '<i data-k="'+i+'" class="'+(i===hi?'on':'')+'"></i>'}).join('')+'</div>':'')}
+function drawHero(){var L=heroSlides();if(!L.length){hero.innerHTML='<div class="mds on" style="background:'+BG.Pengumuman+'"><h3>Mading Digital MPK</h3><p>Belum ada informasi utama.</p></div>';return}if(hi>=L.length)hi=0;hero.innerHTML=L.map(function(x,i){return '<div class="mds'+(i===hi?' on':'')+'" data-id="'+x.id+'" style="'+bgOf(x)+'" role="group" aria-label="Slide '+(i+1)+'"><span class="emo">'+(x.img?'':EMO[x.jenis]||'📢')+'</span><span class="tag">'+e(x.jenis)+' · '+e(x.kat)+'</span><h3>'+e(x.judul)+'</h3><p>'+e(String(x.isi||'').slice(0,130))+(String(x.isi||'').length>130?'…':'')+'</p><b class="pkgo">Baca selengkapnya →</b></div>'}).join('')+(L.length>1?'<div class="mdn"><button type="button" class="btn" data-go="-1" aria-label="Sebelumnya">‹</button><button type="button" class="btn" data-go="1" aria-label="Berikutnya">›</button></div><div class="mdd">'+L.map(function(x,i){return '<i data-k="'+i+'" class="'+(i===hi?'on':'')+'"></i>'}).join('')+'</div>':'')}
 function step(d){var n=heroSlides().length;if(n>1){hi=(hi+d+n)%n;var s=hero.querySelectorAll('.mds'),dd=hero.querySelectorAll('.mdd i');s.forEach(function(el,i){el.classList.toggle('on',i===hi)});dd.forEach(function(el,i){el.classList.toggle('on',i===hi)})}}
 function auto(){clearInterval(ht);ht=setInterval(function(){var pg=hero.closest('[data-page]');if(pg&&!pg.hidden)step(1)},5000)}
-hero.addEventListener('click',function(ev){var g=ev.target.closest('[data-go]'),k=ev.target.closest('[data-k]');if(g){step(+g.dataset.go);return}if(k){hi=+k.dataset.k;step(0);return}var s=ev.target.closest('.mds');if(s&&s.dataset.id)openD(s.dataset.id)});
-hero.addEventListener('pointerenter',function(){clearInterval(ht)});hero.addEventListener('pointerleave',auto);
+hero.addEventListener('click',function(ev){var g=ev.target.closest('[data-go]'),k=ev.target.closest('[data-k]');if(g){step(+g.dataset.go);return}if(k){hi=+k.dataset.k;step(0);return}var s=ev.target.closest('.mds');if(s&&s.dataset.id)openD(s.dataset.id)});hero.addEventListener('pointerenter',function(){clearInterval(ht)});hero.addEventListener('pointerleave',auto);
 var sx=0;hero.addEventListener('touchstart',function(ev){sx=ev.touches[0].clientX;clearInterval(ht)},{passive:true});hero.addEventListener('touchend',function(ev){var dx=ev.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)step(dx<0?1:-1);auto()});
 function ext(n){var m=String(n||'').toLowerCase().match(/\.(pdf|docx?|xlsx?)$/);return m?m[1]:'file'}
-function drawDocs(){var L=pubs().filter(function(x){return x.doc&&x.file});
-if(!L.length){docs.innerHTML=['Template Surat','Undangan Rapat','SK Organisasi'].map(function(t){return '<div class="glass docbtn off"><span class="dtype">PDF</span><span><b>'+t+'</b><br><small>Belum diunggah</small></span></div>'}).join('');return}
-docs.innerHTML=L.map(function(x){var t=ext(x.file.name),c=t==='pdf'?'':t.indexOf('doc')===0?' w':' x';return '<a class="glass docbtn" href="'+x.file.data+'" download="'+e(x.file.name)+'"><span class="dtype'+c+'">'+(t==='file'?'FILE':t.toUpperCase())+'</span><span><b>'+e(x.judul)+'</b><br><small>'+e(x.kat)+' · '+fmtD(x.tgl)+'</small></span></a>'}).join('')}
+function drawDocs(){var L=pubs().filter(function(x){return x.doc&&x.file&&x.file.data});if(!L.length){docs.innerHTML=['Template Surat','Undangan Rapat','SK Organisasi'].map(function(t){return '<div class="glass docbtn off"><span class="dtype">PDF</span><span><b>'+t+'</b><br><small>Belum diunggah</small></span></div>'}).join('');return}docs.innerHTML=L.map(function(x){var t=ext(x.file.name),c=t==='pdf'?'':t.indexOf('doc')===0?' w':' x';return '<a class="glass docbtn" href="'+x.file.data+'" target="_blank" rel="noopener"><span class="dtype'+c+'">'+(t==='file'?'FILE':t.toUpperCase())+'</span><span><b>'+e(x.judul)+'</b><br><small>'+e(x.kat)+' · '+fmtD(x.tgl)+'</small></span></a>'}).join('')}
 function drawTabs(){var C=['Semua'].concat(window.MD.cats());if(C.indexOf(cat)<0)cat='Semua';tabs.innerHTML=C.map(function(k){return '<button type="button" class="btn'+(k===cat?' p':'')+'" data-c="'+e(k)+'">'+e(k)+'</button>'}).join('')}
 function drawArticles(){var box=document.getElementById('md-articles');if(!box)return;var L=pubs().filter(function(x){return x.jenis==='Artikel Literasi'});box.innerHTML=L.length?L.map(function(x){return '<button type="button" class="glass mdc" data-id="'+x.id+'"><span class="th" style="'+bgOf(x)+'">'+(x.img?'':'📚')+'</span><span class="bd"><span class="mdm"><span class="tag">'+e(x.kat||'Literasi')+'</span><span>'+fmtD(x.tgl)+'</span><span>✍ '+e(x.by||'MPK')+'</span></span><h3>'+e(x.judul)+'</h3><p>'+e(String(x.isi||'').slice(0,190))+(String(x.isi||'').length>190?'…':'')+'</p><b class="pkgo">Baca karya →</b></span></button>'}).join(''):'<p class="lead">Belum ada karya yang diterbitkan. Nantikan tulisan pertama dari Ruang Aksara.</p>'}
-function drawGrid(){var L=pubs().filter(function(x){return x.jenis!=='Artikel Literasi'&&(cat==='Semua'||x.kat===cat)&&(x.judul+' '+(x.isi||'')).toLowerCase().indexOf(q)>-1});
-grid.innerHTML=L.length?L.map(function(x){return '<button type="button" class="glass mdc" data-id="'+x.id+'"><span class="th" style="'+bgOf(x)+'">'+(x.img?'':EMO[x.jenis]||'📢')+'</span><span class="bd"><span class="mdm"><span class="tag">'+e(x.jenis)+'</span><span>'+e(x.kat)+'</span><span>'+fmtD(x.tgl)+'</span>'+(x.file?'<span>📎</span>':'')+'</span><h3>'+e(x.judul)+'</h3><p>'+e(x.isi||'')+'</p><b class="pkgo">Baca →</b></span></button>'}).join(''):'<p class="lead">Belum ada informasi pada kategori ini.</p>'}
+function drawGrid(){var L=pubs().filter(function(x){return x.jenis!=='Artikel Literasi'&&(cat==='Semua'||x.kat===cat)&&(x.judul+' '+(x.isi||'')).toLowerCase().indexOf(q)>-1});grid.innerHTML=L.length?L.map(function(x){return '<button type="button" class="glass mdc" data-id="'+x.id+'"><span class="th" style="'+bgOf(x)+'">'+(x.img?'':EMO[x.jenis]||'📢')+'</span><span class="bd"><span class="mdm"><span class="tag">'+e(x.jenis)+'</span><span>'+e(x.kat)+'</span><span>'+fmtD(x.tgl)+'</span>'+(x.file?'<span>📎</span>':'')+'</span><h3>'+e(x.judul)+'</h3><p>'+e(x.isi||'')+'</p><b class="pkgo">Baca →</b></span></button>'}).join(''):'<p class="lead">Belum ada informasi pada kategori ini.</p>'}
 function drawTl(){var L=ld(TK,[]);tlb.innerHTML=L.length?L.slice(0,15).map(function(x){return '<div class="glass"><small>'+fmtT(x.t)+(x.k?' · '+e(x.k):'')+'</small><p style="margin:.2rem 0 0;color:var(--ink)">'+e(x.x)+'</p></div>'}).join(''):'<p class="lead">Belum ada aktivitas tercatat.</p>'}
 function render(){drawHero();drawDocs();drawTabs();drawArticles();drawGrid();drawTl()}
 function paras(t){return String(t||'').split(/\n+/).filter(Boolean).map(function(p){return '<p>'+e(p)+'</p>'}).join('')}
-function openD(id){var it=items().filter(function(x){return x.id===id&&x.status==='terbit'})[0];if(!it)return;
-dlg.innerHTML='<div class="pkh"><span class="tag">'+e(it.jenis)+'</span><span class="tag">'+e(it.kat)+'</span><button type="button" class="pkx" aria-label="Tutup">×</button></div>'+(it.img?'<img class="mdimg" src="'+it.img+'" alt="">':'')+'<h3>'+e(it.judul)+'</h3><p class="mdmeta">'+fmtD(it.tgl)+' · oleh '+e(it.by||'MPK')+'</p><div class="mdbody">'+paras(it.isi)+'</div><div class="btns" style="margin-top:1rem">'+(it.file?'<a class="btn p" href="'+it.file.data+'" download="'+e(it.file.name)+'">⬇ Unduh '+e(it.file.name)+'</a>':'')+'<button type="button" class="btn" data-copy="'+it.id+'">Salin tautan</button></div>';
-if(!dlg.open)dlg.showModal();history.replaceState(null,'','#mading-'+id)}
-grid.addEventListener('click',function(ev){var c=ev.target.closest('[data-id]');if(c)openD(c.dataset.id)});
-var articleBox=document.getElementById('md-articles');if(articleBox)articleBox.addEventListener('click',function(ev){var c=ev.target.closest('[data-id]');if(c)openD(c.dataset.id)});
-tabs.addEventListener('click',function(ev){var b=ev.target.closest('[data-c]');if(b){cat=b.dataset.c;drawTabs();drawGrid()}});
-document.getElementById('md-q').addEventListener('input',function(){q=this.value.toLowerCase().trim();drawGrid()});
-dlg.addEventListener('click',function(ev){if(ev.target===dlg||ev.target.closest('.pkx'))dlg.close();var c=ev.target.closest('[data-copy]');if(c){var u=location.href.split('#')[0]+'#mading-'+c.dataset.copy;try{navigator.clipboard.writeText(u);c.textContent='Tautan disalin'}catch(x){c.textContent=u}}});
-dlg.addEventListener('close',function(){history.replaceState(null,'','#mading')});
+function openD(id){var it=items().filter(function(x){return String(x.id)===String(id)&&x.status==='terbit'})[0];if(!it)return;dlg.innerHTML='<div class="pkh"><span class="tag">'+e(it.jenis)+'</span><span class="tag">'+e(it.kat)+'</span><button type="button" class="pkx" aria-label="Tutup">×</button></div>'+(it.img?'<img class="mdimg" src="'+it.img+'" alt="">':'')+'<h3>'+e(it.judul)+'</h3><p class="mdmeta">'+fmtD(it.tgl)+' · oleh '+e(it.by||'MPK')+'</p><div class="mdbody">'+paras(it.isi)+'</div><div class="btns" style="margin-top:1rem">'+(it.file&&it.file.data?'<a class="btn p" href="'+it.file.data+'" target="_blank" rel="noopener">⬇ Buka '+e(it.file.name)+'</a>':'')+'<button type="button" class="btn" data-copy="'+it.id+'">Salin tautan</button></div>';if(!dlg.open)dlg.showModal();history.replaceState(null,'','#mading-'+id)}
+grid.addEventListener('click',function(ev){var c=ev.target.closest('[data-id]');if(c)openD(c.dataset.id)});var articleBox=document.getElementById('md-articles');if(articleBox)articleBox.addEventListener('click',function(ev){var c=ev.target.closest('[data-id]');if(c)openD(c.dataset.id)});tabs.addEventListener('click',function(ev){var b=ev.target.closest('[data-c]');if(b){cat=b.dataset.c;drawTabs();drawGrid()}});document.getElementById('md-q').addEventListener('input',function(){q=this.value.toLowerCase().trim();drawGrid()});dlg.addEventListener('click',function(ev){if(ev.target===dlg||ev.target.closest('.pkx'))dlg.close();var c=ev.target.closest('[data-copy]');if(c){var u=location.href.split('#')[0]+'#mading-'+c.dataset.copy;try{navigator.clipboard.writeText(u);c.textContent='Tautan disalin'}catch(x){c.textContent=u}}});dlg.addEventListener('close',function(){history.replaceState(null,'','#mading')});
 var toastT=0;function toast(m){var t=document.getElementById('md-toast');if(!t){t=document.createElement('div');t.id='md-toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on')},2600)}
 function live(){render();toast('Mading diperbarui')}
-if(bc)bc.onmessage=live;addEventListener('storage',function(ev){if(ev.key&&ev.key.indexOf('mpk26_mading')===0)live()});
-function fromHash(){if(location.hash.indexOf('#mading-')===0)openD(location.hash.slice(8))}
-addEventListener('hashchange',fromHash);render();auto();fromHash();
+window.addEventListener('mpk:mading-updated',live);
+function fromHash(){if(location.hash.indexOf('#mading-')===0)openD(location.hash.slice(8))}addEventListener('hashchange',fromHash);
+render();auto();if(sup){fetchRows(false).then(function(){render();fromHash()}).catch(function(err){console.error('Gagal memuat Mading Supabase:',err);hero.innerHTML='<div class="mds on"><h3>Mading belum dapat dimuat</h3><p>Periksa koneksi lalu muat ulang halaman.</p></div>'})}fromHash();
 })();
 </script>
 <script>
