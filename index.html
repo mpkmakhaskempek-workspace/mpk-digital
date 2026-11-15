@@ -665,11 +665,11 @@ if(resetForm){
   ()=>head('Arsip Dokumen','Pusat kategori dokumen dan administrasi MPK.')+
    card('Kategori arsip',`<div class="gap">${[['Administrasi','Surat masuk/keluar, notulen, berita acara'],['Regulasi organisasi','AD/ART, GBHO, GBPK, SOP'],['Program kerja','Proposal, TOR, jadwal, laporan kegiatan'],['Keanggotaan','SK, struktur, daftar anggota'],['Evaluasi','Laporan komisi, rekomendasi, LPJ']].map(x=>row(x[0],x[1],'Kategori')).join('')}</div>`)+
    `<p class="portal-note">Belum ada file yang diunggah ke portal. Tautan dokumen resmi dapat ditambahkan setelah lokasi arsip ditentukan.</p>`,
-  ()=>head('Aspirasi Internal','Catat masukan untuk dibahas dalam forum MPK. Formulir ini menyimpan draft secara lokal.')+
-   `<div class="glass"><form id="internal-asp" class="portal-form"><label>Topik<select name="topic"><option>Koordinasi organisasi</option><option>Administrasi</option><option>Program kerja</option><option>Evaluasi</option><option>Lainnya</option></select></label><label>Isi aspirasi<textarea name="body" required maxlength="1200" placeholder="Tuliskan masukan secara jelas dan konstruktif…"></textarea></label><button class="btn p" type="submit">Simpan draft aspirasi</button></form><p id="asp-feedback" class="portal-note" role="status"></p></div><div id="asp-list" class="glass">${renderAspirations(get('aspirations',[]))}</div>`,
+  ()=>head('Aspirasi Internal','Sampaikan masukan untuk dibahas dalam forum MPK. Aspirasi tersimpan di database dan terhubung dengan akun pengirim.')+
+   `<div class="glass"><div id="asp-identity" class="portal-note" aria-live="polite"></div><form id="internal-asp" class="portal-form"><label>Kategori<select name="kategori" required><option value="Koordinasi organisasi">Koordinasi organisasi</option><option value="Administrasi">Administrasi</option><option value="Program kerja">Program kerja</option><option value="Evaluasi">Evaluasi</option><option value="Lainnya">Lainnya</option></select></label><label>Judul aspirasi<input name="judul" required maxlength="150" placeholder="Ringkas inti aspirasi"></label><label>Isi aspirasi<textarea name="isi" required maxlength="3000" placeholder="Tuliskan masukan secara jelas dan konstruktif…"></textarea></label><button class="btn p" type="submit">Kirim aspirasi</button></form><p id="asp-feedback" class="portal-note" role="status" aria-live="polite"></p></div><div id="asp-list" class="glass">${empty('Memuat aspirasi…')}</div>`,
   ()=>head('Pengaturan','Preferensi tampilan dan informasi penyimpanan.')+
-   card('Status sistem',`<div class="gap">${row('Mode','Prototipe lokal','Aktif')}${row('Autentikasi','Belum terhubung','Belum aktif')}${row('Database bersama','Belum tersedia','Belum aktif')}${row('Impor Excel','Browser perangkat ini','Lokal')}${row('Penyimpanan tugas','Browser perangkat ini','Lokal')}</div>`)+
-   card('Data lokal',`<p class="lead">Tugas dan draft aspirasi pada perangkat ini disimpan menggunakan penyimpanan browser. Menghapus data situs/browser dapat menghapus catatan tersebut.</p><button id="clear-local" class="btn" type="button">Hapus tugas & draft lokal</button><p id="settings-feedback" class="portal-note" role="status"></p>`),
+   card('Status sistem',`<div class="gap">${row('Autentikasi','Supabase Auth','Aktif')}${row('Aspirasi Internal','Supabase Database + RLS','Terhubung')}${row('Impor Excel','Browser perangkat ini','Lokal')}${row('Penyimpanan tugas','Browser perangkat ini','Lokal')}</div>`)+
+   card('Data lokal',`<p class="lead">Tugas, foto profil, absensi, dan piket masih tersimpan di browser perangkat ini. Aspirasi Internal yang baru dikirim tersimpan di Supabase dan tidak dihapus melalui tombol ini.</p><button id="clear-local" class="btn" type="button">Hapus tugas lokal</button><p id="settings-feedback" class="portal-note" role="status"></p>`),
   ()=>head('Impor Excel','Unggah workbook resmi MPK, periksa hasil pembacaan, lalu gabungkan ke data lokal tanpa menghapus catatan lama.')+
    card('1. Absensi harian',`<label class="portal-note">Pilih Absen Harian_MPK 26.xlsx<input id="daily-file" type="file" accept=".xlsx,.xls"></label><div id="daily-preview" class="portal-note">Belum ada file dipilih.</div><button id="daily-import" class="btn p" type="button" disabled>Impor / perbarui absensi harian</button>`)+
    card('2. Piket mingguan',`<label class="portal-note">Pilih Absen Piket Mingguan_MPK 26.xlsx<input id="piket-file" type="file" accept=".xlsx,.xls"></label><div id="piket-preview-import" class="portal-note">Belum ada file dipilih.</div><button id="piket-import" class="btn p" type="button" disabled>Impor / perbarui data piket</button>`)+
@@ -696,7 +696,55 @@ if(resetForm){
  function addHistory(kind,file,result,merge){const h=importHistory();h.unshift({kind,file,at:new Date().toISOString(),read:result.records.length,added:merge.added,updated:merge.updated,warnings:result.warnings.length});set('import_history',h.slice(0,30))}
  function renderHistory(){const h=importHistory(),box=document.getElementById('import-history');if(!box)return;box.innerHTML=h.length?h.map(x=>`<div class="rowi"><span><b>${esc(x.kind)} · ${esc(x.file)}</b><br><small>${new Date(x.at).toLocaleString('id-ID')} · ${x.read} entri terbaca · ${x.added} baru · ${x.updated} diperbarui · ${x.warnings} peringatan</small></span></div>`).join(''):empty('Belum ada file yang diimpor.')}
  function renderTasks(items){if(!items.length)return empty('Belum ada tugas. Tambahkan tugas pertama melalui formulir di atas.');return items.map((t,i)=>`<label class="task-item ${t.done?'done':''}"><input type="checkbox" data-task="${i}" ${t.done?'checked':''}><span style="flex:1">${esc(t.title)}<small style="display:block;color:var(--mute)">${t.due?'Tenggat: '+esc(t.due):'Tanpa tenggat'}</small></span><button class="pill-muted" type="button" data-delete-task="${i}">Hapus</button></label>`).join('')}
- function renderAspirations(items){if(!items.length)return empty('Belum ada draft aspirasi tersimpan.');return items.map(x=>row(x.topic,x.body,'Draft lokal')).join('')}
+ const aspirationStatusLabel={baru:'Baru',ditinjau:'Ditinjau Komisi A',diteruskan:'Diteruskan',disetujui:'Disetujui Ketua',ditolak:'Ditolak',selesai:'Selesai'};
+ function renderAspirations(items,canManage=false,isLeadership=false){
+  if(!items?.length)return empty('Belum ada aspirasi yang tercatat.');
+  return items.map(x=>{
+   const status=aspirationStatusLabel[x.status]||x.status||'Belum diketahui';
+   const when=x.created_at?new Date(x.created_at).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'}):'';
+   const allowedStatuses=isLeadership?['baru','ditinjau','diteruskan','disetujui','ditolak','selesai']:['ditinjau','diteruskan'];
+   const statusOptions=[...new Set([x.status,...allowedStatuses])];
+   const controls=canManage?`<div class="portal-toolbar" style="margin-top:.7rem"><label style="flex:1">Perbarui status<select data-asp-status="${esc(x.id)}">${statusOptions.map(v=>`<option value="${v}"${x.status===v?' selected':''}${!isLeadership&&!allowedStatuses.includes(v)?' disabled':''}>${aspirationStatusLabel[v]||v}</option>`).join('')}</select></label><button class="btn" type="button" data-asp-save="${esc(x.id)}">Simpan status</button></div>`:'';
+   return `<article class="rowi" style="display:block;padding:1rem 0"><div style="display:flex;justify-content:space-between;gap:.7rem;flex-wrap:wrap"><b>${esc(x.judul)}</b><span class="tag">${esc(status)}</span></div><p style="margin:.35rem 0;color:var(--mute)">${esc(x.kategori||'Umum')} · ${esc(when)}</p><p style="white-space:pre-wrap;margin:.5rem 0">${esc(x.isi)}</p><small>Pengirim: ${x.anonim?'Anonim':esc(x.profiles?.nama|| (x.user_id===member.id?member.name:'Anggota MPK'))}</small>${controls}</article>`;
+  }).join('');
+ }
+ async function loadInternalAspirations(){
+  const box=document.getElementById('asp-list');if(!box)return;
+  box.innerHTML=empty('Memuat aspirasi dari database…');
+  const [{data,error},{data:canManage,error:manageError},{data:roleData,error:roleError}]=await Promise.all([
+   mpkSupabase.from('aspirasi').select('id,user_id,judul,isi,kategori,anonim,status,created_at').order('created_at',{ascending:false}),
+   mpkSupabase.rpc('can_manage_aspirasi'),
+   mpkSupabase.rpc('get_my_role')
+  ]);
+  if(error){console.error('Load aspirasi error:',error);box.innerHTML=empty('Gagal memuat aspirasi: '+esc(error.message));return;}
+  if(manageError)console.warn('Pemeriksaan kewenangan aspirasi:',manageError.message);
+  const role=typeof roleData==='string'?roleData:(roleData?.role||'');
+  const isLeadership=['super_admin','ketua'].includes(role);
+  box.innerHTML=renderAspirations(data||[],canManage===true&&!manageError,isLeadership);
+  const identity=document.getElementById('asp-identity');
+  if(identity)identity.innerHTML=`Identitas pengirim: <b>${esc(member.name)}</b> · ${esc(member.position)} · Kelas ${esc(member.className)}. Identitas diambil dari akun dan tidak dapat diubah melalui formulir.`;
+ }
+ async function submitInternalAspiration(form){
+  const feedback=document.getElementById('asp-feedback'),button=form.querySelector('button[type=submit]');
+  const fd=new FormData(form),judul=String(fd.get('judul')||'').trim(),isi=String(fd.get('isi')||'').trim(),kategori=String(fd.get('kategori')||'').trim();
+  if(!judul||!isi){feedback.textContent='Judul dan isi aspirasi wajib diisi.';return;}
+  button.disabled=true;button.textContent='Mengirim…';feedback.textContent='Menyimpan aspirasi ke database…';
+  try{
+   const {data,error}=await mpkSupabase.from('aspirasi').insert({user_id:member.id,judul,isi,kategori,anonim:false,status:'baru'}).select('id').single();
+   if(error)throw error;
+   form.reset();feedback.textContent='Aspirasi berhasil dikirim dan tersimpan di Supabase.';
+   await loadInternalAspirations();
+  }catch(err){console.error('Submit aspirasi error:',err);feedback.textContent='Gagal mengirim aspirasi: '+(err.message||'Periksa koneksi dan hak akses akun.');}
+  finally{button.disabled=false;button.textContent='Kirim aspirasi';}
+ }
+ async function updateInternalAspirationStatus(id,status){
+  const allowed=member.isLeadership?['baru','ditinjau','diteruskan','disetujui','ditolak','selesai']:['ditinjau','diteruskan'];
+  if(!allowed.includes(status)){throw new Error('Status tersebut tidak diizinkan untuk akun ini.');}
+  const {error}=await mpkSupabase.from('aspirasi').update({status}).eq('id',id);
+  if(error)throw error;
+  await loadInternalAspirations();
+ }
+
 
  views.push(()=>head('Program Kerja','Perbarui status dan centang langkah SOP. Perubahan tersimpan di browser ini (prototipe) dan tampil di halaman Program kerja.')+['Komisi A','Komisi B','Komisi C','Komisi D'].map(k=>card(k,PK.D.filter(p=>p.k===k).map(p=>{const m=PK.load(),r=m[p.slug]||{},s=PK.eff(p,m);return `<details class="pkadm"><summary><b>${esc(p.n)}</b> <span class="pill st${s}" data-pill="${p.slug}">${PK.S[s]}</span></summary><label>Status <select data-pks="${p.slug}">${PK.S.map((x,i)=>`<option value="${i}"${i===s?' selected':''}>${x}</option>`).join('')}</select></label><ul class="pksteps">${p.sop.map((x,i)=>`<li><label><input type="checkbox" data-pkd="${p.slug}" value="${i}"${(r.d||[]).includes(i)?' checked':''}> ${esc(x)}</label></li>`).join('')}</ul></details>`}).join(''))).join(''));
 
@@ -861,7 +909,7 @@ if(resetForm){
   if(i===4){const monthSel=document.getElementById('att-month'),content=document.getElementById('att-content'),stats=document.getElementById('att-stats');function drawDaily(){const all=get('attendance_records',[]),mine=all.filter(x=>normName(x.name)===normName(member.name)),m=attendanceMonths[Number(monthSel.value)],list=mine.filter(x=>x.month===m),count=k=>list.filter(x=>x.status===k).length;stats.innerHTML=[stat(mine.length,'Total catatan','Seluruh periode'),stat(count('H'),'Hadir',m),stat(count('S')+count('I'),'Sakit / izin',m),stat(count('A'),'Alpa',m)].join('');content.innerHTML=list.length?`<div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Tanggal</th><th>Status</th><th>Sumber</th></tr></thead><tbody>${list.sort((a,b)=>a.date.localeCompare(b.date)).map(x=>`<tr><td>${fmtDate(x.date)}</td><td>${({H:'Hadir',S:'Sakit',I:'Izin',A:'Alpa'})[x.status]}</td><td>${esc(x.sourceSheet)}</td></tr>`).join('')}</tbody></table></div>`:empty('Belum ada entri berstatus untuk '+m+'. Sel kosong pada Excel tidak dihitung sebagai alpa.')}monthSel.addEventListener('change',drawDaily);drawDaily()}
   if(i===5){const sel=document.getElementById('piket-week'),content=document.getElementById('piket-content');function drawPiket(){const all=get('piket_records',[]),w=Number(sel.value),list=all.filter(x=>x.week===w&&normName(x.name)===normName(member.name));content.innerHTML=list.length?`<div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Tanggal</th><th>Kelompok</th><th>Status</th></tr></thead><tbody>${list.sort((a,b)=>a.date.localeCompare(b.date)).map(x=>`<tr><td>${fmtDate(x.date)}</td><td>${esc(x.group||'-')}</td><td>${({H:'Hadir',S:'Sakit',I:'Izin',A:'Alpa'})[x.status]}</td></tr>`).join('')}</tbody></table></div>`:empty('Belum ada status piket terisi untuk Minggu '+w+'.')}sel.addEventListener('change',drawPiket);drawPiket()}
   if(i===7){const form=document.getElementById('task-form'),box=document.getElementById('task-list');form.addEventListener('submit',e=>{e.preventDefault();const fd=new FormData(form),title=String(fd.get('title')||'').trim();if(!title)return;const a=get('tasks',[]);a.push({title,due:fd.get('due')||'',done:false});set('tasks',a);box.innerHTML=renderTasks(a);form.reset()});box.addEventListener('change',e=>{if(e.target.matches('[data-task]')){const a=get('tasks',[]),n=Number(e.target.dataset.task);if(a[n]){a[n].done=e.target.checked;set('tasks',a);box.innerHTML=renderTasks(a)}}});box.addEventListener('click',e=>{const b=e.target.closest('[data-delete-task]');if(b){const a=get('tasks',[]);a.splice(Number(b.dataset.deleteTask),1);set('tasks',a);box.innerHTML=renderTasks(a)}})}
-  if(i===10){const form=document.getElementById('internal-asp'),box=document.getElementById('asp-list');form.addEventListener('submit',e=>{e.preventDefault();const fd=new FormData(form),a=get('aspirations',[]);a.unshift({topic:fd.get('topic'),body:String(fd.get('body')||'').trim()});set('aspirations',a);box.innerHTML=renderAspirations(a);form.reset();document.getElementById('asp-feedback').textContent='Draft tersimpan di browser perangkat ini.'})}
+  if(i===10){const form=document.getElementById('internal-asp'),box=document.getElementById('asp-list');loadInternalAspirations().catch(err=>{console.error(err);box.innerHTML=empty('Gagal memuat aspirasi dari database.')});form.addEventListener('submit',e=>{e.preventDefault();submitInternalAspiration(form)});box.addEventListener('click',async e=>{const button=e.target.closest('[data-asp-save]');if(!button)return;const id=button.dataset.aspSave,select=box.querySelector(`[data-asp-status="${CSS.escape(id)}"]`);if(!select)return;button.disabled=true;try{await updateInternalAspirationStatus(id,select.value)}catch(err){console.error(err);document.getElementById('asp-feedback').textContent='Gagal memperbarui status: '+err.message}finally{button.disabled=false}})}
   if(i===12){let dailyParsed=null,piketParsed=null;const df=document.getElementById('daily-file'),pf=document.getElementById('piket-file'),dp=document.getElementById('daily-preview'),pp=document.getElementById('piket-preview-import'),db=document.getElementById('daily-import'),pb=document.getElementById('piket-import');renderHistory();
    async function readFile(file,kind){if(!file)return null;if(typeof XLSX==='undefined')throw Error('Pustaka pembaca Excel belum termuat. Periksa koneksi internet lalu muat ulang halaman.');const wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true,cellFormula:false});return kind==='daily'?parseDaily(wb):parsePiket(wb)}
    df.addEventListener('change',async()=>{dailyParsed=null;db.disabled=true;dp.textContent='Membaca workbook…';try{dailyParsed=await readFile(df.files[0],'daily');dp.innerHTML=`<b>${esc(df.files[0].name)}</b><br>${dailyParsed.records.length} status terisi terbaca · ${dailyParsed.memberCount} anggota terdeteksi · ${dailyParsed.warnings.length} peringatan${dailyParsed.warnings.length?'<br>'+dailyParsed.warnings.slice(0,5).map(esc).join('<br>'):''}`;db.disabled=!dailyParsed.records.length}catch(e){dp.textContent='Gagal membaca: '+e.message}});
@@ -869,7 +917,7 @@ if(resetForm){
    db.addEventListener('click',()=>{if(!dailyParsed)return;try{const m=mergeRecords('attendance_records',dailyParsed.records);addHistory('Absensi harian',df.files[0].name,dailyParsed,m);dp.innerHTML+=`<br><b>Berhasil digabung:</b> ${m.added} baru, ${m.updated} diperbarui. ${m.total} catatan tersimpan di browser ini.`;db.disabled=true;renderHistory()}catch(e){dp.textContent='Impor gagal: '+e.message}});
    pb.addEventListener('click',()=>{if(!piketParsed)return;try{const m=mergeRecords('piket_records',piketParsed.records);addHistory('Piket mingguan',pf.files[0].name,piketParsed,m);pp.innerHTML+=`<br><b>Berhasil digabung:</b> ${m.added} baru, ${m.updated} diperbarui. ${m.total} catatan tersimpan di browser ini.`;pb.disabled=true;renderHistory()}catch(e){pp.textContent='Impor gagal: '+e.message}})
   }
-  if(i===11){document.getElementById('clear-local').addEventListener('click',()=>{set('tasks',[]);set('aspirations',[]);document.getElementById('settings-feedback').textContent='Data tugas dan draft aspirasi lokal telah dibersihkan.'})}
+  if(i===11){document.getElementById('clear-local').addEventListener('click',()=>{set('tasks',[]);document.getElementById('settings-feedback').textContent='Daftar tugas lokal telah dibersihkan. Aspirasi di Supabase tidak terpengaruh.'})}
  }
  menu.forEach((name,i)=>{const b=document.createElement('button');b.type='button';b.textContent=name;b.addEventListener('click',()=>show(i));nav.appendChild(b)});
  const loginForm=document.getElementById('pl-login-form');
@@ -880,7 +928,10 @@ if(resetForm){
   if(!mpkSupabase)throw new Error('Kunci Publishable Supabase belum dipasang pada file website.');
   const {data:profile,error}=await mpkSupabase.from('profiles').select('*').eq('id',user.id).single();
   if(error||!profile||profile.aktif!==true)throw new Error('Profil anggota tidak aktif atau belum terhubung. Hubungi Super Admin.');
-  member={id:user.id,name:profile.nama||user.user_metadata?.nama||user.email||'Anggota MPK',className:profile.kelas||'—',position:profile.jabatan||'Anggota',period:'2026/2027',commission:profile.komisi||'—',division:profile.komisi||'—'};
+  member={id:user.id,name:profile.nama||user.user_metadata?.nama||user.email||'Anggota MPK',className:profile.kelas||'—',position:profile.jabatan||'Anggota',period:'2026/2027',commission:profile.komisi||'—',division:profile.komisi||'—',role:'anggota'};
+  const {data:actualRole,error:roleError}=await mpkSupabase.rpc('get_my_role');
+  if(!roleError)member.role=typeof actualRole==='string'?actualRole:(actualRole?.role||'anggota');
+  member.isLeadership=['super_admin','ketua'].includes(member.role);
   const {data:canManageMading,error:madingAccessError}=await mpkSupabase.rpc('can_manage_mading');
   const madingNav=nav.children[18];if(madingNav)madingNav.hidden=!!madingAccessError||canManageMading!==true;
   login.hidden=true;app.hidden=false;
