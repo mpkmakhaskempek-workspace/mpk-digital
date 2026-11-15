@@ -301,7 +301,7 @@ nav a{position:relative}nav a::after{content:"";position:absolute;left:0;right:0
 .dtype{flex:none;width:48px;height:58px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:.8rem;color:#fff;background:#C0392B}.dtype.w{background:#2B6CB0}.dtype.x{background:#2F855A}
 .mdgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem}
 .mdc{padding:0;overflow:hidden;cursor:pointer;text-align:left;color:inherit;font:inherit;display:flex;flex-direction:column}
-.mdc .th{height:150px;background-size:cover;background-position:center;display:grid;place-items:center;font-size:3.2rem}
+.mdc .th{height:190px;background-size:contain;background-repeat:no-repeat;background-position:center;background-color:#241d14;display:grid;place-items:center;font-size:3.2rem}
 .mdc .bd{padding:1rem;display:flex;flex-direction:column;gap:.45rem}.mdc h3{font-size:1.1rem;line-height:1.25}
 .mdc p{margin:0;color:var(--mute);font-size:.9rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .mdm{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;font-size:.75rem;color:var(--mute)}
@@ -309,7 +309,7 @@ nav a{position:relative}nav a::after{content:"";position:absolute;left:0;right:0
 .tl>div::before{content:"";position:absolute;left:calc(-1.7rem - 7px);top:1.1rem;width:12px;height:12px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(227,179,65,.2)}
 #md-dlg{border:1px solid var(--edge);border-radius:22px;background:#08201a;color:var(--ink);max-width:680px;width:calc(100% - 2rem);max-height:90vh;padding:1.4rem}
 #md-dlg::backdrop{background:rgba(0,0,0,.65);backdrop-filter:blur(4px)}
-.mdimg{width:100%;max-height:260px;object-fit:cover;border-radius:14px;margin-bottom:.8rem}.mdmeta{color:var(--mute);font-size:.88rem;margin:.2rem 0 1rem}.mdbody p{margin:.5rem 0}
+.mdimg{display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;object-position:center;background:#241d14;border-radius:14px;margin:0 auto .8rem}.mdmeta{color:var(--mute);font-size:.88rem;margin:.2rem 0 1rem}.mdbody p{margin:.5rem 0}
 #md-toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,30px);opacity:0;background:#0F7A57;color:#fff;padding:.6rem 1.2rem;border-radius:999px;z-index:70;transition:opacity .35s,transform .35s;pointer-events:none;border:1px solid var(--gold)}#md-toast.on{opacity:1;transform:translate(-50%,0)}
 @media(max-width:760px){.mdhero{min-height:290px}.mds{padding:1.2rem 1.2rem 3rem}.mds .emo{font-size:3rem}}
 .wrap.bar{padding-left:1.25rem;padding-right:1.25rem}
@@ -799,7 +799,7 @@ if(resetForm){
 
  /* 5. Kelola Mading — Supabase Database + Storage */
  const audit=(aksi,judul)=>{const a=get('mading_audit',[]);a.unshift({t:new Date().toISOString(),who:member.name,aksi,judul});set('mading_audit',a.slice(0,100))};
- const bannerBlob=f=>new Promise((res,rej)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const W=1000,H=420,c=document.createElement('canvas');c.width=W;c.height=H;const k=Math.max(W/im.width,H/im.height),w=im.width*k,h=im.height*k;c.getContext('2d').drawImage(im,(W-w)/2,(H-h)/2,w,h);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error('Gagal memproses banner.')),'image/jpeg',.82)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('Gambar tidak bisa dibaca.'))};im.src=u});
+ const bannerBlob=f=>new Promise((res,rej)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const maxSide=1800,k=Math.min(1,maxSide/Math.max(im.width,im.height)),W=Math.round(im.width*k),H=Math.round(im.height*k),c=document.createElement('canvas');c.width=W;c.height=H;c.getContext('2d').drawImage(im,0,0,W,H);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error('Gagal memproses banner.')),'image/jpeg',.9)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('Gambar tidak bisa dibaca.'))};im.src=u});
  const madingStorage=()=>mpkSupabase.storage.from('mading-digital');
  const uploadMadingFile=async(path,file,contentType)=>{const {error}=await madingStorage().upload(path,file,{contentType,upsert:false,cacheControl:'3600'});if(error)throw error;return path};
  const removeMadingFiles=async paths=>{const clean=paths.filter(Boolean);if(clean.length){const {error}=await madingStorage().remove(clean);if(error)console.warn('Gagal menghapus file Mading:',error.message)}};
