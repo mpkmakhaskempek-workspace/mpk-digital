@@ -351,6 +351,10 @@ nav a{position:relative}nav a::after{content:"";position:absolute;left:0;right:0
 <h2>MA KHAS Kempek · Periode 2026/2027</h2>
 <p>Kanal penghubung civitas MA KHAS Kempek bersama MPK dalam bentuk daring. Menjadi mitra, bukan pengatur.</p>
 <div class="btns"><a class="btn p" href="#aspirasi">Sampaikan aspirasi</a><a class="btn" href="#tentang">Tentang kami</a></div>
+<div class="btns" style="margin-top:.85rem">
+<button class="btn" id="welcome-voice-btn" type="button" aria-describedby="welcome-voice-status">🔊 Dengarkan sambutan</button>
+<span id="welcome-voice-status" role="status" aria-live="polite" style="align-self:center;color:var(--mute);font-size:.82rem">Sambutan suara MPK</span>
+</div>
 </div></div>
 <section id="fungsi">
 <div class="wrap">
@@ -378,6 +382,11 @@ nav a{position:relative}nav a::after{content:"";position:absolute;left:0;right:0
 </div>
 <div data-page="tentang" hidden>
 <div class="wrap"><div class="glass pagehero"><span class="ph-ico">🏛️</span><div><h1>Tentang Kami</h1><p>Mengenal MPK MA KHAS Kempek: siapa kami, apa peran kami, dan batas wewenang kami.</p></div><i class="ph-star s1">✦</i><i class="ph-star s2">✦</i><i class="ph-star s3">✦</i></div></div>
+<section aria-label="Penjelasan suara MPK" style="padding:0 0 1.2rem">
+<div class="wrap"><div class="glass" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1rem 1.2rem">
+<div><h2 style="margin:0 0 .35rem;font-size:1.15rem">Dengarkan penjelasan MPK</h2><p style="margin:0;opacity:.82">Kenali siapa kami, peran, susunan, dan batas wewenang MPK MA KHAS Kempek melalui narasi suara.</p></div>
+<div><button class="btn p" type="button" id="tentang-voice-btn">🔊 Dengarkan penjelasan</button><p id="tentang-voice-status" role="status" aria-live="polite" style="margin:.45rem 0 0;font-size:.82rem;opacity:.8"></p></div>
+</div></div></section>
 <section id="tentang-kami"><div class="wrap"><div class="grid3"><div class="glass"><h3>Siapa kami</h3><p>Majelis Perwakilan Kelas (MPK) MA KHAS Kempek adalah lembaga perwakilan siswa yang beranggotakan perwakilan kelas.</p></div>
 <div class="glass"><h3>Peran kami</h3><p>Menghubungkan, menata, mengawal, dan mengevaluasi organisasi kesiswaan, serta menjadi wadah penyalur aspirasi siswa.</p></div>
 <div class="glass"><h3>Periode 2026/2027</h3><p>27 anggota yang terdiri dari BPH dan empat komisi, bekerja dengan bimbingan Pembina MPK.</p></div></div></div></section>
@@ -645,7 +654,8 @@ if(resetForm){
  const attendanceMonths=['Juli','Agustus','September','Oktober','November','Desember','Januari','Februari','Maret','April','Mei','Juni'];
  const views=[
   ()=>head('Dashboard','Ringkasan ruang kerja dan aktivitas keanggotaan.')+
-   `<div class="member-card glass"><div class="member-avatar">MS</div><div><div class="eyebrow">SELAMAT DATANG</div><h3>${member.name}</h3><p class="lead" style="margin:.2rem 0 0">${member.position} · Kelas ${member.className} · ${member.period}</p></div></div>`+
+   `<div class="member-card glass" id="member-welcome-profile" data-member-role="${esc(member.role)}" data-member-position="${esc(member.position)}" data-member-commission="${esc(member.commission)}"><div class="member-avatar">${esc((member.name||'MP').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase())}</div><div><div class="eyebrow">SELAMAT DATANG</div><h3>${esc(member.name)}</h3><p class="lead" style="margin:.2rem 0 0">${esc(member.position)} · Kelas ${esc(member.className)} · ${esc(member.period)}</p></div></div>`+
+   `<section class="glass" style="margin-top:1rem"><div class="eyebrow">SAMBUTAN PERSONAL</div><h3>Selamat datang, ${esc(member.name)}!</h3><p class="lead" style="margin:.35rem 0 .8rem">Dengarkan pesan sambutan khusus untuk akun MPK kamu.</p><button class="btn" id="member-welcome-voice-btn" type="button">🔊 Dengarkan sambutan saya</button><p id="member-welcome-voice-status" class="portal-note" role="status" aria-live="polite" style="margin:.6rem 0 0">Sambutan menyebut nama sesuai profil akun.</p></section>`+
    `<div class="portal-grid">${stat(get('attendance_records',[]).filter(x=>normName(x.name)===normName(member.name)).length,'Catatan absensi','Data lokal hasil impor')}${stat(get('piket_records',[]).filter(x=>normName(x.name)===normName(member.name)).length,'Catatan piket','Data lokal hasil impor')}${stat(members.length,'Anggota terdaftar','Daftar pada halaman direktori')}${stat('0','Tugas pribadi','Belum ada tugas yang ditambahkan')}</div>`+
    card('Pusat informasi',`<p class="lead" style="margin:0">Gunakan menu di samping untuk membuka profil, direktori anggota, absensi, piket, agenda, tugas, evaluasi, dan arsip. Tanda “—” berarti data belum tersedia, bukan nilai nol.</p>`)+
    card('Catatan data',`<p class="lead" style="margin:0">Rekap absensi dan piket pada prototipe ini belum berisi catatan kehadiran. Pengisian resmi membutuhkan pengelola dan basis data bersama.</p>`),
@@ -1083,6 +1093,7 @@ if(resetForm){
   const memberManageNav=nav.children[19];if(memberManageNav)memberManageNav.hidden=member.role!=='super_admin';
   login.hidden=true;app.hidden=false;
   show(0);
+  document.dispatchEvent(new CustomEvent('mpk:dashboard-ready'));
  }
  if(loginForm)loginForm.addEventListener('submit',async e=>{
   e.preventDefault();
@@ -1353,5 +1364,219 @@ function loop(){tick();requestAnimationFrame(loop)}
 place();size();if(!calm)loop();
 })();
 </script>
+
+<script>
+/* Voice Welcome MPK — tidak mengubah navigasi atau sistem portal */
+(function () {
+  const button = document.getElementById('welcome-voice-btn');
+  const status = document.getElementById('welcome-voice-status');
+  if (!button || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Suara tidak didukung browser';
+    }
+    if (status) status.textContent = 'Browser ini belum mendukung sambutan suara.';
+    return;
+  }
+
+  const message = 'Assalamu’alaikum warahmatullahi wabarakatuh. Selamat datang di MPK Digital MA KHAS Kempek. Ruang kolaborasi, aspirasi, dan koordinasi untuk mewujudkan organisasi yang lebih transparan, terarah, dan progresif. Selamat berkunjung.';
+  let voices = [];
+
+  function loadVoices() {
+    voices = window.speechSynthesis.getVoices() || [];
+  }
+  loadVoices();
+  window.speechSynthesis.addEventListener?.('voiceschanged', loadVoices);
+
+  function speakWelcome() {
+    window.speechSynthesis.cancel();
+    voices = window.speechSynthesis.getVoices() || [];
+    /* Jangan jatuh ke suara default berbahasa Inggris. */
+    const indonesianVoice = voices.find(v => /^id-ID$/i.test(v.lang)) ||
+      voices.find(v => /^id(-|_)/i.test(v.lang));
+    if (!indonesianVoice) {
+      status.textContent = 'Suara Bahasa Indonesia belum tersedia di perangkat ini. Sambutan tidak diputar agar tidak berubah menjadi suara bahasa Inggris.';
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.voice = indonesianVoice;
+    utterance.lang = indonesianVoice.lang;
+    utterance.rate = 0.92;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    utterance.onstart = function () {
+      button.textContent = '⏸ Sambutan sedang diputar';
+      status.textContent = 'Sambutan suara sedang diputar.';
+    };
+    utterance.onend = function () {
+      button.textContent = '🔊 Dengarkan sambutan';
+      status.textContent = 'Sambutan selesai. Selamat berkunjung!';
+    };
+    utterance.onerror = function () {
+      button.textContent = '🔊 Dengarkan sambutan';
+      status.textContent = 'Suara otomatis dibatasi browser. Tekan tombol untuk mencoba lagi.';
+    };
+    window.speechSynthesis.speak(utterance);
+  }
+
+  button.addEventListener('click', function () {
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      button.textContent = '🔊 Dengarkan sambutan';
+      status.textContent = 'Sambutan dihentikan.';
+    } else {
+      speakWelcome();
+    }
+  });
+
+  /* Coba sambut otomatis satu kali; tombol tetap tersedia jika browser memblokir autoplay. */
+  window.addEventListener('load', function () {
+    window.setTimeout(function () {
+      try {
+        speakWelcome();
+      } catch (error) {
+        status.textContent = 'Tekan tombol untuk mendengarkan sambutan.';
+      }
+    }, 900);
+  }, { once: true });
+})();
+</script>
+
+<script>
+(function () {
+  const button = document.getElementById('tentang-voice-btn');
+  const status = document.getElementById('tentang-voice-status');
+  if (!button || !status) return;
+  if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+    button.disabled = true;
+    status.textContent = 'Browser ini belum mendukung fitur suara.';
+    return;
+  }
+
+  const narration = 'Assalamu’alaikum warahmatullahi wabarakatuh. Selamat datang di halaman Tentang Kami, MPK MA KHAS Kempek. MPK adalah singkatan dari Majelis Perwakilan Kelas, sebuah lembaga perwakilan siswa yang beranggotakan perwakilan kelas. MPK hadir untuk menghubungkan suara siswa dengan organisasi kesiswaan dan madrasah. Peran MPK adalah menghimpun dan menyalurkan aspirasi, menata koordinasi, mengawal jalannya program, serta melakukan evaluasi dan menyusun rekomendasi. Pada periode 2026/2027, MPK memiliki 27 anggota yang terdiri dari Badan Pengurus Harian dan empat komisi, dengan bimbingan Pembina MPK. Dalam menjalankan tugas, MPK juga memiliki batas wewenang. MPK dapat mengadakan forum, berkoordinasi, melakukan evaluasi, dan menyampaikan rekomendasi. Namun MPK tidak memberikan sanksi kepada organisasi lain, tidak mengambil alih tugas pembina, tidak mengubah kebijakan madrasah, dan tidak memaksakan keputusan. Jika suatu persoalan menyangkut kebijakan sekolah atau membutuhkan keputusan madrasah, MPK harus berkoordinasi dengan pembina dan Wakil Kepala Madrasah bidang Kesiswaan. Bagi kami, MPK bukan tentang siapa yang paling berkuasa, melainkan tentang bagaimana setiap suara dapat didengar, setiap organisasi dapat berkoordinasi, dan setiap tanggung jawab dapat dijalankan dengan tertib. Terima kasih telah mengenal MPK MA KHAS Kempek. Wassalamu’alaikum warahmatullahi wabarakatuh.';
+  let voices = [];
+  function loadVoices() { voices = window.speechSynthesis.getVoices() || []; }
+  loadVoices();
+  window.speechSynthesis.addEventListener?.('voiceschanged', loadVoices);
+
+  function reset() {
+    button.textContent = '🔊 Dengarkan penjelasan';
+  }
+  button.addEventListener('click', function () {
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      reset();
+      status.textContent = 'Penjelasan dihentikan.';
+      return;
+    }
+    window.speechSynthesis.cancel();
+    voices = window.speechSynthesis.getVoices() || [];
+    /* Gunakan suara Indonesia yang benar-benar tersedia; jangan fallback ke Inggris. */
+    const voice = voices.find(v => /^id-ID$/i.test(v.lang)) ||
+      voices.find(v => /^id(-|_)/i.test(v.lang));
+    if (!voice) {
+      status.textContent = 'Suara Bahasa Indonesia belum tersedia di perangkat ini. Penjelasan tidak diputar agar tidak berubah menjadi suara bahasa Inggris.';
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(narration);
+    utterance.voice = voice;
+    utterance.lang = voice.lang;
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    utterance.onstart = function () {
+      button.textContent = '⏹ Hentikan penjelasan';
+      status.textContent = 'Penjelasan MPK sedang diputar.';
+    };
+    utterance.onend = function () {
+      reset();
+      status.textContent = 'Penjelasan selesai. Terima kasih telah mendengarkan.';
+    };
+    utterance.onerror = function () {
+      reset();
+      status.textContent = 'Suara tidak dapat diputar. Coba lagi melalui tombol ini.';
+    };
+    try {
+      window.speechSynthesis.speak(utterance);
+    } catch (error) {
+      reset();
+      status.textContent = 'Suara tidak dapat diputar di browser ini.';
+    }
+  });
+})();
+</script>
+
+
+<script>
+/* Sambutan personal dashboard: nama diambil dari profil akun yang sedang login. */
+(function () {
+  if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+  let voices = [];
+  function loadVoices() { voices = window.speechSynthesis.getVoices() || []; }
+  loadVoices();
+  window.speechSynthesis.addEventListener?.('voiceschanged', loadVoices);
+
+  function getIndonesianVoice() {
+    voices = window.speechSynthesis.getVoices() || [];
+    return voices.find(v => /^id-ID$/i.test(v.lang)) || voices.find(v => /^id(-|_)/i.test(v.lang)) || null;
+  }
+  function speakMemberGreeting() {
+    const button = document.getElementById('member-welcome-voice-btn');
+    const status = document.getElementById('member-welcome-voice-status');
+    if (!button || !status) return;
+    const profileCard = document.getElementById('member-welcome-profile');
+    const name = profileCard?.querySelector('h3')?.textContent?.trim() || '';
+    const role = profileCard?.dataset.memberRole || 'anggota';
+    const position = profileCard?.dataset.memberPosition || 'Anggota MPK';
+    const commission = profileCard?.dataset.memberCommission || '';
+    if (!name) { status.textContent = 'Nama akun belum dapat dibaca dari profil.'; return; }
+    const voice = getIndonesianVoice();
+    if (!voice) {
+      status.textContent = 'Suara Bahasa Indonesia belum tersedia di perangkat ini. Sambutan tidak diputar agar tidak berubah menjadi suara bahasa Inggris.';
+      return;
+    }
+    const roleMessages = {
+      ketua: 'Sebagai Ketua MPK, amanahmu adalah mengarahkan organisasi, menyatukan koordinasi antar pengurus, memastikan keputusan dijalankan, serta menjaga agar MPK tetap menjadi jembatan aspirasi siswa.',
+      wakil_ketua: 'Sebagai Wakil Ketua MPK, tugasmu adalah mendampingi Ketua, membantu menjaga koordinasi, memantau pelaksanaan program, dan memastikan setiap bagian organisasi dapat bekerja selaras.',
+      sekretaris: `Sebagai ${position}, kamu memegang peran penting dalam administrasi organisasi. Jaga ketertiban surat-menyurat, notulensi, pendataan, arsip, dan dokumentasi agar setiap keputusan serta kegiatan MPK tercatat dengan baik.`,
+      bendahara: `Sebagai ${position}, kamu mengemban amanah pengelolaan keuangan. Catat setiap pemasukan dan pengeluaran dengan teliti, jaga bukti transaksi, dan sampaikan laporan secara transparan serta dapat dipertanggungjawabkan.`,
+      ketua_komisi: `Sebagai Ketua ${commission ? 'Komisi ' + commission : 'Komisi'}, kamu bertugas mengarahkan anggota komisi, menyusun pembagian kerja, mengawal program, dan menyampaikan perkembangan serta evaluasi kepada Dewan Harian.`,
+      anggota: `Sebagai ${position}${commission ? ' di Komisi ' + commission : ''}, kontribusimu penting dalam menjalankan program, menyelesaikan tanggung jawab bersama, menyampaikan gagasan, dan menjaga komunikasi dengan pengurus lainnya.`,
+      super_admin: 'Kamu bertugas menjaga pengelolaan sistem dan data organisasi dengan cermat, aman, dan bertanggung jawab.'
+    };
+    const roleMessage = roleMessages[role] || roleMessages.anggota;
+    window.speechSynthesis.cancel();
+    const message = `Assalamu’alaikum warahmatullahi wabarakatuh. Selamat datang, ${name}. ${roleMessage} Ingat, jabatan adalah amanah untuk melayani dan bekerja bersama, bukan sekadar gelar. Selamat menjalankan tugas di MPK MA KHAS Kempek periode 2026/2027. Wassalamu’alaikum warahmatullahi wabarakatuh.`;
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.voice = voice;
+    utterance.lang = voice.lang;
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    utterance.onstart = () => { button.textContent = '⏹ Hentikan sambutan'; status.textContent = `Sambutan untuk ${name} sedang diputar.`; };
+    utterance.onend = () => { button.textContent = '🔊 Dengarkan sambutan saya'; status.textContent = 'Sambutan selesai. Selamat menjalankan amanah!'; };
+    utterance.onerror = () => { button.textContent = '🔊 Dengarkan sambutan saya'; status.textContent = 'Suara tidak dapat diputar. Coba tekan tombol sekali lagi.'; };
+    window.speechSynthesis.speak(utterance);
+  }
+  document.addEventListener('click', function (event) {
+    const button = event.target.closest('#member-welcome-voice-btn');
+    if (!button) return;
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      button.textContent = '🔊 Dengarkan sambutan saya';
+      const status = document.getElementById('member-welcome-voice-status');
+      if (status) status.textContent = 'Sambutan dihentikan.';
+    } else {
+      speakMemberGreeting();
+    }
+  });
+  document.addEventListener('mpk:dashboard-ready', function () {
+    /* Coba otomatis setelah login; tombol tetap tersedia jika browser memblokir autoplay. */
+    window.setTimeout(speakMemberGreeting, 700);
+  });
+})();
+</script>
+
 </body>
 </html>
