@@ -627,7 +627,7 @@ if(resetForm){
 }
  const members=[['M. Shidqy Fathullah','XI-04','Ketua MPK','BPH'],['Revi Rahardian','X-04','Wakil Ketua','BPH'],['Muhammad Rizky','X-03','Sekretaris','BPH'],['Ibnu Aqiel','XI-04','Sekretaris','BPH'],['M. Aqmal Maulana','XI-04','Bendahara','BPH'],['Faqih Hanif Azzufar Putra','XI-04','Bendahara','BPH'],['Raihan Abu Sofyan','XI-04','Koordinator','Komisi A'],['Muhammad Fathir As-Syakir','X-01','Anggota','Komisi A'],['Danang Permana H. P.','X-04','Anggota','Komisi A'],['Darul Ridwan Ashar','XI-04','Anggota','Komisi A'],['Ahmad Muzaki Nur','XI-05','Anggota','Komisi B'],['Hilmi Fajri Sidqi','X-02','Anggota','Komisi B'],['Ayyasy Samy Kaisa','X-04','Anggota','Komisi B'],['M. Wildansyah','XI-04','Koordinator','Komisi C'],['M. Azril Al Muntaha','XI-04','Koordinator','Komisi C'],['M. Eizzza Khafidol Ikhsan','X-01','Anggota','Komisi C'],['Muhammad Amar Fadli','X-02','Anggota','Komisi C'],['Panca Mulya Abadi','X-03','Anggota','Komisi C'],['Althof','-','Anggota','Komisi C'],['Fazal Musdafa','-','Anggota','Komisi C'],['Inu Haidar Jamil Al-Ghifari','XI-04','Anggota','Komisi C'],['M. Sirojul Munir','-','Anggota','Komisi C'],['Gemilang Nata Aqila','XI-04','Koordinator','Komisi D'],['Muhammad Al-Jabar Ramadhanu','X-04','Anggota','Komisi D'],['Muhammad Daniel Kafabi','X-05','Anggota','Komisi D'],['Muhammad Said Mubarok','X-05','Anggota','Komisi D'],['Alfan Shiddiq','-','Anggota','Komisi D']
  ];
- const menu=['Dashboard','Profil Anggota','Direktori Anggota','Struktur & Komisi','Absensi Harian','Piket Mingguan','Agenda & Kalender','Tugas Saya','Evaluasi','Arsip Dokumen','Aspirasi','Pengaturan','Impor Excel','Program Kerja','Papan Informasi','Kehadiran & Evaluasi','E-Voting','Notifikasi & Aplikasi','Kelola Mading'];
+ const menu=['Dashboard','Profil Anggota','Direktori Anggota','Struktur & Komisi','Absensi Harian','Piket Mingguan','Agenda & Kalender','Tugas Saya','Evaluasi','Arsip Dokumen','Aspirasi','Pengaturan','Impor Excel','Program Kerja','Papan Informasi','Kehadiran & Evaluasi','E-Voting','Notifikasi & Aplikasi','Kelola Mading','Manajemen Anggota'];
  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const get=(k,d)=>{try{return JSON.parse(localStorage.getItem('mpk26_'+k))??d}catch(e){return d}};
  const set=(k,v)=>{try{localStorage.setItem('mpk26_'+k,JSON.stringify(v));if(k==='attendance_records'||k==='piket_records')logAct(k==='piket_records'?'Data piket diperbarui':'Data absensi diperbarui');return true}catch(e){return false}};
@@ -685,7 +685,21 @@ if(resetForm){
    card('1. Absensi harian',`<label class="portal-note">Pilih Absen Harian_MPK 26.xlsx<input id="daily-file" type="file" accept=".xlsx,.xls"></label><div id="daily-preview" class="portal-note">Belum ada file dipilih.</div><button id="daily-import" class="btn p" type="button" disabled>Impor / perbarui absensi harian</button>`)+
    card('2. Piket mingguan',`<label class="portal-note">Pilih Absen Piket Mingguan_MPK 26.xlsx<input id="piket-file" type="file" accept=".xlsx,.xls"></label><div id="piket-preview-import" class="portal-note">Belum ada file dipilih.</div><button id="piket-import" class="btn p" type="button" disabled>Impor / perbarui data piket</button>`)+
    card('3. Riwayat impor',`<div id="import-history">${empty('Belum ada file yang diimpor.')}</div>`)+
-   `<p class="portal-note">Mode implementasi saat ini: pembacaan Excel dan penyimpanan data berjalan di browser ini (localStorage). Ini belum menyinkronkan data ke perangkat anggota lain. Jangan unggah data pribadi ke komputer umum. Sinkronisasi bersama memerlukan backend dan autentikasi.</p>`
+   `<p class="portal-note">Mode implementasi saat ini: pembacaan Excel dan penyimpanan data berjalan di browser ini (localStorage). Ini belum menyinkronkan data ke perangkat anggota lain. Jangan unggah data pribadi ke komputer umum. Sinkronisasi bersama memerlukan backend dan autentikasi.</p>`,
+  ()=>head('Manajemen Anggota','Area khusus Super Admin untuk membuat akun anggota MPK melalui sistem autentikasi.')+
+   card('Tambah akun anggota',`<form id="member-create-form" class="portal-form">
+    <label>Nama lengkap<input name="nama" required minlength="2" maxlength="100" autocomplete="name" placeholder="Nama lengkap anggota"></label>
+    <label>Username<input name="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_.-]{3,32}" autocomplete="off" placeholder="Contoh: ahmad.rizki"></label>
+    <label>Password awal<input name="password" type="password" required minlength="10" maxlength="128" autocomplete="new-password" placeholder="Minimal 10 karakter"></label>
+    <label>Kelas<input name="kelas" maxlength="30" placeholder="Contoh: X-01"></label>
+    <label>Unit<select name="unit" required><option value="">Pilih unit</option><option value="putra">Putra</option><option value="putri">Putri</option></select></label>
+    <label>Jabatan / akses<select name="role_akses" required><option value="">Pilih jabatan</option><option value="ketua">Ketua MPK</option><option value="wakil_ketua">Wakil Ketua MPK</option><option value="sekretaris">Sekretaris</option><option value="bendahara">Bendahara</option><option value="ketua_komisi">Ketua Komisi</option><option value="anggota">Anggota</option></select></label>
+    <label>Komisi<select name="komisi"><option value="">Tidak ada / belum ditentukan</option><option value="A">Komisi A</option><option value="B">Komisi B</option><option value="C">Komisi C</option><option value="D">Komisi D</option></select></label>
+    <p class="portal-note">Username dipakai untuk login. Password awal minimal 10 karakter. Untuk jabatan Ketua Komisi, komisi wajib dipilih.</p>
+    <button class="btn p" type="submit">Buat akun anggota</button>
+    <p id="member-create-feedback" class="portal-note" role="status" aria-live="polite"></p>
+   </form>`)+
+   card('Hasil pembuatan akun',`<div id="member-create-result">${empty('Belum ada akun yang dibuat pada sesi ini.')}</div>`)
  ];
  const normName=x=>String(x??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
  const validStatus=x=>{const v=String(x??'').trim().toUpperCase();const map={H:'H',HADIR:'H',S:'S',SAKIT:'S',I:'I',IZIN:'I',A:'A',ALPA:'A',ALPHA:'A'};return map[v]||''};
@@ -919,8 +933,9 @@ if(resetForm){
   main.querySelector('#md-tlform').addEventListener('submit',e=>{e.preventDefault();const t=String(new FormData(e.target).get('x')).trim();if(!t)return;MD.tl(t,'Kegiatan');audit('Menambah linimasa',t);MD.render();e.target.reset();drawAudit()});
   if(await refresh())all();
  }
- function show(i){clearInterval(carT);Array.from(nav.children).forEach((b,k)=>b.classList.toggle('on',k===i));main.innerHTML=views[i]();bindPage(i);badge()}
+ function show(i){if(i===19&&member.role!=='super_admin')return;clearInterval(carT);Array.from(nav.children).forEach((b,k)=>b.classList.toggle('on',k===i));main.innerHTML=views[i]();bindPage(i);badge()}
  function bindPage(i){
+  if(i===19)bindMemberManagement();
   if(i===14)bindInfo();if(i===15)bindKD();if(i===16)bindVote();if(i===17)bindNotif();if(i===18)bindMading();
   if(i===13){const upd=sl=>{const m=PK.load(),p=PK.D.find(x=>x.slug===sl),v=PK.eff(p,m),pl=main.querySelector('[data-pill="'+sl+'"]');pl.textContent=PK.S[v];pl.className='pill st'+v;main.querySelector('[data-pks="'+sl+'"]').value=v};
    main.querySelectorAll('[data-pks]').forEach(el=>el.addEventListener('change',()=>{const m=PK.load(),sl=el.dataset.pks;(m[sl]=m[sl]||{}).s=+el.value;PK.save(m);upd(sl);{const pp=PK.D.find(x=>x.slug===sl);logAct('Status proker diubah: '+pp.n+' → '+PK.S[PK.eff(pp,m)])}}));
@@ -940,6 +955,30 @@ if(resetForm){
   }
   if(i===11){document.getElementById('clear-local').addEventListener('click',()=>{set('tasks',[]);document.getElementById('settings-feedback').textContent='Daftar tugas lokal telah dibersihkan. Aspirasi di Supabase tidak terpengaruh.'})}
  }
+ function bindMemberManagement(){
+  const form=document.getElementById('member-create-form'),feedback=document.getElementById('member-create-feedback'),result=document.getElementById('member-create-result');
+  if(!form||!feedback||!result)return;
+  const roleSelect=form.elements.role_akses,commissionSelect=form.elements.komisi;
+  const syncCommission=()=>{commissionSelect.required=roleSelect.value==='ketua_komisi';};
+  roleSelect.addEventListener('change',syncCommission);syncCommission();
+  form.addEventListener('submit',async e=>{
+   e.preventDefault();
+   if(member.role!=='super_admin'){feedback.textContent='Akses ditolak. Halaman ini khusus Super Admin.';return;}
+   if(!mpkSupabase){feedback.textContent='Koneksi Supabase belum tersedia.';return;}
+   const fd=new FormData(form),payload={operation:'create_member',nama:String(fd.get('nama')||'').trim(),username:String(fd.get('username')||'').trim().toLowerCase(),password:String(fd.get('password')||''),kelas:String(fd.get('kelas')||'').trim(),unit:String(fd.get('unit')||'').trim().toLowerCase(),role_akses:String(fd.get('role_akses')||''),komisi:String(fd.get('komisi')||'').trim().toUpperCase()||null};
+   const submit=form.querySelector('button[type="submit"]');submit.disabled=true;submit.textContent='Membuat akun…';feedback.textContent='Mengirim permintaan ke server…';
+   try{
+    const {data,error}=await mpkSupabase.functions.invoke('admin-manage-member',{body:payload});
+    if(error)throw new Error(data?.error||error.message||'Permintaan gagal diproses.');
+    if(!data?.success)throw new Error(data?.error||'Akun belum berhasil dibuat.');
+    const m=data.member||{};feedback.textContent=data.message||'Akun anggota berhasil dibuat.';
+    result.innerHTML=`<div class="rowi"><span><b>${esc(m.nama||payload.nama)}</b><br>Username: ${esc(m.username||payload.username)}</span><span class="tag">Berhasil</span></div><div class="rowi"><span>Jabatan</span><b>${esc(m.jabatan||payload.role_akses)}</b></div><div class="rowi"><span>Kelas</span><b>${esc(m.kelas||payload.kelas||'—')}</b></div><div class="rowi"><span>Unit</span><b>${esc(m.unit||payload.unit)}</b></div><div class="rowi"><span>Komisi</span><b>${esc(m.komisi||'—')}</b></div><p class="portal-note">Akun sudah dibuat. Sampaikan username dan password awal kepada anggota secara pribadi; jangan tampilkan password di grup umum.</p>`;
+    form.reset();syncCommission();
+   }catch(err){console.error('Gagal membuat akun anggota:',err);feedback.textContent='Gagal membuat akun: '+(err.message||'Periksa koneksi dan log Edge Function.');}
+   finally{submit.disabled=false;submit.textContent='Buat akun anggota';}
+  });
+ }
+
  menu.forEach((name,i)=>{const b=document.createElement('button');b.type='button';b.textContent=name;b.addEventListener('click',()=>show(i));nav.appendChild(b)});
  const loginForm=document.getElementById('pl-login-form');
  const loginStatus=document.getElementById('pl-login-status');
@@ -955,6 +994,7 @@ if(resetForm){
   member.isLeadership=['super_admin','ketua'].includes(member.role);
   const {data:canManageMading,error:madingAccessError}=await mpkSupabase.rpc('can_manage_mading');
   const madingNav=nav.children[18];if(madingNav)madingNav.hidden=!!madingAccessError||canManageMading!==true;
+  const memberManageNav=nav.children[19];if(memberManageNav)memberManageNav.hidden=member.role!=='super_admin';
   login.hidden=true;app.hidden=false;
   show(0);
  }
