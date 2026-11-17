@@ -686,20 +686,7 @@ if(resetForm){
    card('2. Piket mingguan',`<label class="portal-note">Pilih Absen Piket Mingguan_MPK 26.xlsx<input id="piket-file" type="file" accept=".xlsx,.xls"></label><div id="piket-preview-import" class="portal-note">Belum ada file dipilih.</div><button id="piket-import" class="btn p" type="button" disabled>Impor / perbarui data piket</button>`)+
    card('3. Riwayat impor',`<div id="import-history">${empty('Belum ada file yang diimpor.')}</div>`)+
    `<p class="portal-note">Mode implementasi saat ini: pembacaan Excel dan penyimpanan data berjalan di browser ini (localStorage). Ini belum menyinkronkan data ke perangkat anggota lain. Jangan unggah data pribadi ke komputer umum. Sinkronisasi bersama memerlukan backend dan autentikasi.</p>`,
-  ()=>head('Manajemen Anggota','Area khusus Super Admin untuk membuat akun anggota MPK melalui sistem autentikasi.')+
-   card('Tambah akun anggota',`<form id="member-create-form" class="portal-form">
-    <label>Nama lengkap<input name="nama" required minlength="2" maxlength="100" autocomplete="name" placeholder="Nama lengkap anggota"></label>
-    <label>Username<input name="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_.-]{3,32}" autocomplete="off" placeholder="Contoh: ahmad.rizki"></label>
-    <label>Password awal<input name="password" type="password" required minlength="10" maxlength="128" autocomplete="new-password" placeholder="Minimal 10 karakter"></label>
-    <label>Kelas<input name="kelas" maxlength="30" placeholder="Contoh: X-01"></label>
-    <label>Unit<select name="unit" required><option value="">Pilih unit</option><option value="putra">Putra</option><option value="putri">Putri</option></select></label>
-    <label>Jabatan / akses<select name="role_akses" required><option value="">Pilih jabatan</option><option value="ketua">Ketua MPK</option><option value="wakil_ketua">Wakil Ketua MPK</option><option value="sekretaris">Sekretaris</option><option value="bendahara">Bendahara</option><option value="ketua_komisi">Ketua Komisi</option><option value="anggota">Anggota</option></select></label>
-    <label>Komisi<select name="komisi"><option value="">Tidak ada / belum ditentukan</option><option value="A">Komisi A</option><option value="B">Komisi B</option><option value="C">Komisi C</option><option value="D">Komisi D</option></select></label>
-    <p class="portal-note">Username dipakai untuk login. Password awal minimal 10 karakter. Untuk jabatan Ketua Komisi, komisi wajib dipilih.</p>
-    <button class="btn p" type="submit">Buat akun anggota</button>
-    <p id="member-create-feedback" class="portal-note" role="status" aria-live="polite"></p>
-   </form>`)+
-   card('Hasil pembuatan akun',`<div id="member-create-result">${empty('Belum ada akun yang dibuat pada sesi ini.')}</div>`)
+
  ];
  const normName=x=>String(x??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
  const validStatus=x=>{const v=String(x??'').trim().toUpperCase();const map={H:'H',HADIR:'H',S:'S',SAKIT:'S',I:'I',IZIN:'I',A:'A',ALPA:'A',ALPHA:'A'};return map[v]||''};
@@ -892,6 +879,22 @@ if(resetForm){
   card('Catat ke linimasa publik',`<form id="md-tlform" class="portal-toolbar"><input name="x" placeholder="Contoh: Rapat Pleno Triwulan selesai dilaksanakan" maxlength="140" required style="flex:1;min-width:220px"><button class="btn" type="submit">Tambah</button></form><p class="portal-note">Linimasa masih tersimpan lokal di perangkat pengelola; sinkronisasi lintas perangkat memerlukan tabel tersendiri.</p>`)+
   card('Riwayat aktivitas pengelola','<div id="md-audit"></div><p class="portal-note">Riwayat ini masih lokal pada perangkat pengelola, bukan audit log server.</p>')+
   '<p class="portal-note">Konten, status publikasi, banner, dan lampiran tersimpan di Supabase. Perubahan hak akses tetap diverifikasi oleh RLS.</p>');
+ views.push(
+  ()=>head('Manajemen Anggota','Area khusus Super Admin untuk membuat akun anggota MPK melalui sistem autentikasi.')+
+   card('Tambah akun anggota',`<form id="member-create-form" class="portal-form">
+    <label>Nama lengkap<input name="nama" required minlength="2" maxlength="100" autocomplete="name" placeholder="Nama lengkap anggota"></label>
+    <label>Username<input name="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_.-]{3,32}" autocomplete="off" placeholder="Contoh: ahmad.rizki"></label>
+    <label>Password awal<input name="password" type="password" required minlength="10" maxlength="128" autocomplete="new-password" placeholder="Minimal 10 karakter"></label>
+    <label>Kelas<input name="kelas" maxlength="30" placeholder="Contoh: X-01"></label>
+    <label>Unit<select name="unit" required><option value="">Pilih unit</option><option value="putra">Putra</option><option value="putri">Putri</option></select></label>
+    <label>Jabatan / akses<select name="role_akses" required><option value="">Pilih jabatan</option><option value="ketua">Ketua MPK</option><option value="wakil_ketua">Wakil Ketua MPK</option><option value="sekretaris">Sekretaris</option><option value="bendahara">Bendahara</option><option value="ketua_komisi">Ketua Komisi</option><option value="anggota">Anggota</option></select></label>
+    <label>Komisi<select name="komisi"><option value="">Tidak ada / belum ditentukan</option><option value="A">Komisi A</option><option value="B">Komisi B</option><option value="C">Komisi C</option><option value="D">Komisi D</option></select></label>
+    <p class="portal-note">Username dipakai untuk login. Password awal minimal 10 karakter. Untuk jabatan Ketua Komisi, komisi wajib dipilih.</p>
+    <button class="btn p" type="submit">Buat akun anggota</button>
+    <p id="member-create-feedback" class="portal-note" role="status" aria-live="polite"></p>
+   </form>`)+
+   card('Hasil pembuatan akun',`<div id="member-create-result">${empty('Belum ada akun yang dibuat pada sesi ini.')}</div>`)
+ );
  async function bindMading(){
   const form=main.querySelector('#md-form'),list=main.querySelector('#md-list'),st=main.querySelector('#md-st'),cats=main.querySelector('#md-category-options'),items=()=>MD.load();
   const {data:allowed,error:accessError}=await mpkSupabase.rpc('can_manage_mading');
