@@ -522,6 +522,38 @@ nav a{position:relative}nav a::after{content:"";position:absolute;left:0;right:0
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="MPK Digital">
+
+<style id="rd-hero-brain-inline-layout-fix">
+/* Keep the neural brain beside the hero heading on desktop and tablet. */
+.rd-page .rd-hero{
+  display:grid !important;
+  grid-template-columns:minmax(0,1.08fr) minmax(300px,.92fr) !important;
+  align-items:center !important;
+  min-height:560px;
+}
+.rd-page .rd-hero-copy{grid-column:1;grid-row:1;min-width:0}
+.rd-page .rd-hero-art{
+  grid-column:2;grid-row:1;
+  min-height:360px;
+  width:100%;
+  opacity:.72;
+  transform:none;
+}
+.rd-page .rd-neural-brain{width:min(100%,520px);height:auto}
+@media(max-width:700px){
+  .rd-page .rd-hero{
+    grid-template-columns:minmax(0,1fr) !important;
+    min-height:0;
+  }
+  .rd-page .rd-hero-copy{grid-column:1;grid-row:1}
+  .rd-page .rd-hero-art{
+    grid-column:1;grid-row:2;
+    min-height:260px;
+    opacity:.48;
+  }
+}
+</style>
+
 </head>
 <body>
 <canvas id="bg" aria-hidden="true"></canvas>
