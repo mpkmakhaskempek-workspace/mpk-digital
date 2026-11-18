@@ -554,6 +554,20 @@ nav a{position:relative}nav a::after{content:"";position:absolute;left:0;right:0
 }
 </style>
 
+
+
+<!-- Orbit dekoratif dihilangkan sesuai revisi -->
+
+<style>
+/* FINAL FIX: hapus seluruh cincin/orbit dekoratif di belakang ilustrasi otak hero */
+.rd-hero-art .rd-orbit,
+.rd-neural-stage .rd-orbit,
+.rd-neural-stage ellipse,
+.rd-neural-stage .rd-brain-halo {
+  display: none !important;
+  opacity: 0 !important;
+}
+</style>
 </head>
 <body>
 <canvas id="bg" aria-hidden="true"></canvas>
@@ -714,7 +728,7 @@ nav a{position:relative}nav a::after{content:"";position:absolute;left:0;right:0
         <div class="rd-hero-meta"><span>MPK</span><b>×</b><span>OSIS</span><b>×</b><span>ADIWIYATA</span><b>×</b><span>PEMBINA</span></div>
       </div>
       <div class="rd-hero-art rd-neural-stage" aria-label="Visual otak dengan jaringan neuron bercahaya yang bergerak">
-        <div class="rd-orbit rd-orbit-one"></div><div class="rd-orbit rd-orbit-two"></div>
+        
         <div class="rd-orbit-label rd-label-a">PERSPEKTIF</div><div class="rd-orbit-label rd-label-b">BUKTI</div><div class="rd-orbit-label rd-label-c">DIALOG</div>
         <svg class="rd-neural-brain" viewBox="0 0 520 390" role="img" aria-labelledby="rdBrainTitle rdBrainDesc">
           <title id="rdBrainTitle">Otak dan jaringan neuron</title><desc id="rdBrainDesc">Ilustrasi otak abstrak dengan jalur saraf dan titik cahaya yang bergerak.</desc>
