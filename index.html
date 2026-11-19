@@ -515,6 +515,37 @@ nav a{position:relative}nav a::after{content:"";position:absolute;left:0;right:0
 .rd-page button{transition:background-color .2s ease,border-color .2s ease,transform .2s ease;}
 .rd-page button:hover{border-color:rgba(232,211,145,.65)!important;}
 @media(max-width:700px){.rd-workspace{padding-left:14px!important;padding-right:14px!important}.rd-welcome{border-radius:14px!important}.rd-work-card,.rd-thread-card{padding:17px!important}}
+
+/* Dynamic Workspace Dashboard */
+.ws-welcome{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.35rem 1.5rem;background:linear-gradient(120deg,rgba(15,122,87,.18),rgba(227,179,65,.07))}
+.ws-welcome h3{font-size:clamp(1.25rem,3vw,1.8rem);margin:.35rem 0}
+.ws-welcome p{color:var(--mute);margin:0 0 .7rem}
+.ws-welcome .member-avatar{flex:0 0 58px}
+.ws-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(260px,.85fr);gap:1rem;margin-top:1rem;align-items:start}
+.ws-main-col,.ws-side-col{display:grid;gap:1rem;min-width:0}
+.ws-voice{display:grid;grid-template-columns:1fr auto;gap:.4rem 1rem;align-items:center}
+.ws-voice .portal-note{grid-column:1/-1;margin:0}
+.ws-stats{margin:0}
+.ws-section-head{display:flex;justify-content:space-between;align-items:center;gap:.8rem;margin-bottom:.8rem}
+.ws-section-head h3{font-size:1.12rem;margin:.2rem 0 0}
+.ws-link{border:0;background:none;color:var(--gold);font:700 .82rem/1.2 "Plus Jakarta Sans",sans-serif;cursor:pointer;white-space:nowrap}
+.ws-activity-list,.ws-task-list{display:grid;gap:.15rem}
+.ws-activity{display:flex;gap:.7rem;padding:.65rem 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.ws-activity:last-child,.ws-task:last-child{border-bottom:0}
+.ws-dot{width:9px;height:9px;flex:0 0 9px;margin:.35rem 0 0;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(227,179,65,.12)}
+.ws-activity b,.ws-task b{display:block;font-size:.88rem}
+.ws-activity small,.ws-task small{display:block;color:var(--mute);font-size:.76rem;margin-top:.15rem}
+.ws-task{display:flex;gap:.7rem;padding:.65rem 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.ws-task-mark{width:17px;height:17px;flex:0 0 17px;border:1px solid var(--gold);border-radius:5px;margin-top:.1rem}
+.ws-shortcuts{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
+.ws-shortcuts button{display:grid;gap:.15rem;text-align:left;padding:.75rem;border:1px solid var(--edge);border-radius:12px;background:rgba(255,255,255,.025);color:var(--ink);font:inherit;cursor:pointer;transition:border-color .2s,transform .2s}
+.ws-shortcuts button:hover{border-color:var(--gold);transform:translateY(-2px)}
+.ws-shortcuts button span{font-size:1.25rem;color:var(--gold)}
+.ws-shortcuts button b{font-size:.82rem}
+.ws-shortcuts button small{font-size:.7rem;color:var(--mute)}
+@media(max-width:900px){.ws-layout{grid-template-columns:1fr}}
+@media(max-width:600px){.ws-welcome{padding:1rem}.ws-voice{grid-template-columns:1fr}.ws-voice .portal-note{grid-column:auto}.ws-shortcuts{grid-template-columns:1fr 1fr}}
+
 </style>
 <meta name="theme-color" content="#04130E">
 <link rel="manifest" href="manifest.webmanifest">
@@ -1005,12 +1036,25 @@ if(resetForm){
  const row=(a,b,c='')=>`<div class="rowi"><span><b>${esc(a)}</b><br>${esc(b)}</span>${c?`<span class="tag">${esc(c)}</span>`:''}</div>`;
  const attendanceMonths=['Juli','Agustus','September','Oktober','November','Desember','Januari','Februari','Maret','April','Mei','Juni'];
  const views=[
-  ()=>head('Dashboard','Ringkasan ruang kerja dan aktivitas keanggotaan.')+
-   `<div class="member-card glass" id="member-welcome-profile" data-member-role="${esc(member.role)}" data-member-position="${esc(member.position)}" data-member-commission="${esc(member.commission)}"><div class="member-avatar">${esc((member.name||'MP').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase())}</div><div><div class="eyebrow">SELAMAT DATANG</div><h3>${esc(member.name)}</h3><p class="lead" style="margin:.2rem 0 0">${esc(member.position)} · Kelas ${esc(member.className)} · ${esc(member.period)}</p></div></div>`+
-   `<section class="glass" style="margin-top:1rem"><div class="eyebrow">SAMBUTAN PERSONAL</div><h3>Selamat datang, ${esc(member.name)}!</h3><p class="lead" style="margin:.35rem 0 .8rem">Dengarkan pesan sambutan khusus untuk akun MPK kamu.</p><button class="btn" id="member-welcome-voice-btn" type="button">🔊 Dengarkan sambutan saya</button><p id="member-welcome-voice-status" class="portal-note" role="status" aria-live="polite" style="margin:.6rem 0 0">Sambutan menyebut nama sesuai profil akun.</p></section>`+
-   `<div class="portal-grid">${stat(get('attendance_records',[]).filter(x=>normName(x.name)===normName(member.name)).length,'Catatan absensi','Data lokal hasil impor')}${stat(get('piket_records',[]).filter(x=>normName(x.name)===normName(member.name)).length,'Catatan piket','Data lokal hasil impor')}${stat(members.length,'Anggota terdaftar','Daftar pada halaman direktori')}${stat('0','Tugas pribadi','Belum ada tugas yang ditambahkan')}</div>`+
-   card('Pusat informasi',`<p class="lead" style="margin:0">Gunakan menu di samping untuk membuka profil, direktori anggota, absensi, piket, agenda, tugas, evaluasi, dan arsip. Tanda “—” berarti data belum tersedia, bukan nilai nol.</p>`)+
-   card('Catatan data',`<p class="lead" style="margin:0">Rekap absensi dan piket pada prototipe ini belum berisi catatan kehadiran. Pengisian resmi membutuhkan pengelola dan basis data bersama.</p>`),
+  ()=>{ 
+   const tasks=get('tasks',[]),openTasks=tasks.filter(x=>!x.done),doneTasks=tasks.filter(x=>x.done);
+   const activities=get('activity_log',[]).slice(0,5),unread=get('notifs',[]).filter(x=>!x.read);
+   const mineAttendance=get('attendance_records',[]).filter(x=>normName(x.name)===normName(member.name));
+   const minePiket=get('piket_records',[]).filter(x=>normName(x.name)===normName(member.name));
+   const activityHTML=activities.length?activities.map(x=>`<div class="ws-activity"><span class="ws-dot"></span><div><b>${esc(x.x||'Aktivitas diperbarui')}</b><small>${x.t?new Date(x.t).toLocaleString('id-ID'):'Waktu tidak tersedia'}</small></div></div>`).join(''):empty('Belum ada aktivitas yang tercatat pada perangkat ini.');
+   const taskHTML=openTasks.length?openTasks.slice(0,4).map(x=>`<div class="ws-task"><span class="ws-task-mark"></span><div><b>${esc(x.title)}</b><small>${x.due?'Tenggat '+esc(x.due):'Belum ada tenggat'}</small></div></div>`).join(''):empty('Tidak ada tugas terbuka pada daftar lokal.');
+   return head('Dashboard','Pusat aktivitas, tugas, dan informasi keanggotaan MPK.')+
+    `<div class="ws-welcome glass"><div class="ws-welcome-copy"><div class="eyebrow">RUANG KERJA ANGGOTA · ${esc(member.period)}</div><h3>Selamat datang, ${esc(member.name)}.</h3><p>${esc(member.position)} · ${esc(member.commission)} · Kelas ${esc(member.className)}</p><span class="tag">Akun aktif</span></div><div class="member-avatar">${esc((member.name||'MP').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase())}</div></div>`+
+    `<div class="ws-layout"><div class="ws-main-col">`+
+     `<section class="glass ws-voice"><div><div class="eyebrow">SAMBUTAN PERSONAL</div><h3>Mulai aktivitas organisasimu.</h3><p class="lead">Lihat pekerjaan yang perlu ditindaklanjuti dan kabar terbaru di ruang kerja MPK.</p></div><button class="btn" id="member-welcome-voice-btn" type="button">🔊 Dengarkan sambutan</button><p id="member-welcome-voice-status" class="portal-note" role="status" aria-live="polite">Sambutan menyebut nama sesuai profil akun.</p></section>`+
+     `<div class="portal-grid ws-stats">${stat(openTasks.length,'Tugas terbuka','Daftar tugas pada browser ini')}${stat(doneTasks.length,'Tugas selesai','Daftar tugas pada browser ini')}${stat(unread.length,'Notifikasi belum dibaca','Penyimpanan lokal perangkat')}${stat(members.length,'Anggota terdaftar','Daftar struktur website')}</div>`+
+     `<section class="glass"><div class="ws-section-head"><div><div class="eyebrow">AKTIVITAS TERKINI</div><h3>Jejak aktivitas</h3></div><span class="pill-muted">5 aktivitas terakhir</span></div><div class="ws-activity-list">${activityHTML}</div><p class="portal-note">Aktivitas yang tampil berasal dari catatan lokal browser ini, bukan feed lintas perangkat.</p></section>`+
+    `</div><aside class="ws-side-col">`+
+     `<section class="glass"><div class="ws-section-head"><div><div class="eyebrow">TINDAK LANJUT</div><h3>Tugas saya</h3></div><button class="ws-link" type="button" data-dashboard-go="7">Lihat semua →</button></div><div class="ws-task-list">${taskHTML}</div></section>`+
+     `<section class="glass"><div class="eyebrow">AKSES CEPAT</div><h3 style="margin:.25rem 0 .8rem">Ruang kerja</h3><div class="ws-shortcuts"><button type="button" data-dashboard-go="13"><span>▦</span><b>Program Kerja</b><small>Progres program</small></button><button type="button" data-dashboard-go="14"><span>▤</span><b>Papan Informasi</b><small>Pengumuman MPK</small></button><button type="button" data-dashboard-go="17"><span>◉</span><b>Notifikasi</b><small>${unread.length} belum dibaca</small></button><button type="button" data-dashboard-go="9"><span>▧</span><b>Arsip Dokumen</b><small>Dokumen organisasi</small></button></div></section>`+
+     `<section class="glass"><div class="eyebrow">RINGKASAN KEANGGOTAAN</div><h3 style="margin:.25rem 0 .7rem">Profil saya</h3>${row('Jabatan',member.position)}${row('Komisi',member.commission)}${row('Kelas',member.className)}${row('Absensi tercatat',mineAttendance.length)}${row('Piket tercatat',minePiket.length)}<p class="portal-note">Absensi dan piket dihitung dari data impor lokal yang tersedia.</p></section>`+
+    `</aside></div>`;
+  },
   ()=>head('Profil Anggota','Identitas keanggotaan yang ditampilkan pada portal.')+
    card('Kartu anggota',`<div class="member-card">${photoBox(member.name,1)}<div><h3>${member.name}</h3><span class="tag">${member.position}</span><p style="margin:.7rem 0 0"><label class="btn up">Ganti foto<input type="file" hidden accept="image/*" data-up="${esc(member.name)}"></label></p></div></div><p class="portal-note">Foto disimpan di browser perangkat ini saja (prototipe). Gerakkan kursor atau geser jari di atas foto.</p><div style="margin-top:1rem">${[['Nama lengkap',member.name],['Kelas',member.className],['Jabatan',member.position],['Unit',member.commission],['Komisi',member.division],['Periode',member.period],['Status data','Profil contoh']].map(x=>row(x[0],x[1])).join('')}</div>`)+
    `<p class="portal-note">Perubahan identitas resmi harus mengikuti SK dan data administrasi MPK.</p>`,
@@ -1321,6 +1365,7 @@ if(resetForm){
  }
  function show(i){if(i===19&&member.role!=='super_admin')return;clearInterval(carT);Array.from(nav.children).forEach((b,k)=>b.classList.toggle('on',k===i));main.innerHTML=views[i]();bindPage(i);badge()}
  function bindPage(i){
+  if(i===0)main.querySelectorAll('[data-dashboard-go]').forEach(b=>b.addEventListener('click',()=>show(Number(b.dataset.dashboardGo))));
   if(i===19)bindMemberManagement();
   if(i===14)bindInfo();if(i===15)bindKD();if(i===16)bindVote();if(i===17)bindNotif();if(i===18)bindMading();
   if(i===13){const upd=sl=>{const m=PK.load(),p=PK.D.find(x=>x.slug===sl),v=PK.eff(p,m),pl=main.querySelector('[data-pill="'+sl+'"]');pl.textContent=PK.S[v];pl.className='pill st'+v;main.querySelector('[data-pks="'+sl+'"]').value=v};
