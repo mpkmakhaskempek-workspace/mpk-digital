@@ -1255,6 +1255,23 @@ nav a{position:relative}nav a::after{content:"";position:absolute;left:0;right:0
 
 
 
+
+<style id="mpk-kesiswaan-module">
+#portal .ks-hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(190px,.7fr);gap:1rem;align-items:center;padding:1.35rem;border:1px solid rgba(227,179,65,.28);border-radius:18px;background:radial-gradient(circle at 90% 10%,rgba(227,179,65,.15),transparent 38%),linear-gradient(120deg,#103728,#0a2118)}
+#portal .ks-hero h3{font-size:1.35rem;margin:.25rem 0 .45rem;color:#f2f6ee}
+#portal .ks-hero p{margin:0;color:#b5c9bb;line-height:1.65;font-size:.88rem}
+#portal .ks-mark{display:grid;place-items:center;min-height:110px;border:1px solid rgba(227,179,65,.2);border-radius:16px;color:#e8bd4f;font-size:2.5rem;background:rgba(255,255,255,.025)}
+#portal .ks-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.8rem;margin:1rem 0}
+#portal .ks-stat{padding:1rem;border:1px solid rgba(227,179,65,.16);border-radius:14px;background:linear-gradient(160deg,rgba(19,54,40,.88),rgba(9,29,21,.9))}
+#portal .ks-stat small{display:block;color:#a8c0b1;font-size:.72rem}
+#portal .ks-stat strong{display:block;color:#e8bd4f;font-size:1.65rem;margin:.3rem 0}
+#portal .ks-stat span{display:block;color:#a8c0b1;font-size:.7rem;line-height:1.45}
+#portal .ks-access-list{display:flex;gap:.45rem;flex-wrap:wrap;margin:.7rem 0}
+#portal .ks-access{display:inline-flex;padding:.38rem .65rem;border-radius:99px;border:1px solid rgba(123,200,156,.3);background:rgba(123,200,156,.08);color:#bde4c8;font-size:.72rem;font-weight:700}
+#portal .ks-note{padding:.85rem 1rem;border-left:3px solid #e3b341;border-radius:8px;background:rgba(227,179,65,.07);color:#c7d7cb;font-size:.8rem;line-height:1.6}
+@media(max-width:650px){#portal .ks-hero{grid-template-columns:1fr}#portal .ks-mark{min-height:72px}}
+</style>
+
 </head>
 <body>
 <canvas id="bg" aria-hidden="true"></canvas>
@@ -2781,7 +2798,7 @@ function show(i){if(i===19&&member.role!=='super_admin')return;clearInterval(car
   });
   draw();
  }
- function bindPage(i){if(__UP[i]){__UP[i]();return} 
+ function bindPage(i){if(__UP[i]){__UP[i]();return} if(i===26)bindKesiswaanDashboard(); 
   if(i===0)main.querySelectorAll('[data-dashboard-go]').forEach(b=>b.addEventListener('click',()=>show(Number(b.dataset.dashboardGo))));
   if(i===21)bindInternalDiscussion();
   if(i===24)bindAIAssistant();
@@ -2975,7 +2992,30 @@ function show(i){if(i===19&&member.role!=='super_admin')return;clearInterval(car
   refreshMembers().catch(err=>{console.error('Gagal memuat daftar anggota:',err);listFeedback.textContent='Gagal memuat anggota: '+(err.message||'Periksa koneksi dan izin RLS.');list.innerHTML=empty('Data anggota belum dapat ditampilkan.');});
  }
 
- const navGroups=[['Ruang Pribadi',[0,1,7,20]],['Organisasi',[2,3,4,5,6,8,13,15,16]],['Kolaborasi & Informasi',[10,17,14,9,21,22,23,24,18,25]],['Pengelolaan Sistem',[11,12,19]]];
+ // === MODUL KESISWAAN: tahap awal dashboard dan pemeriksaan akses server ===
+ menu.push('Modul Kesiswaan');
+ views.push(()=>kesiswaanDashboardView());
+ function kesiswaanDashboardView(){
+  const a=member.kesiswaanAccess||{};
+  const accessNames=[['admin','Administrator'],['komisi_b','Komisi B'],['komisi_c','Komisi C'],['komisi_d','Komisi D'],['operator','Operator OSIS'],['pembina','Pembina'],['waka','Waka Kesiswaan'],['pimpinan','Pimpinan MPK']].filter(x=>a[x[0]]).map(x=>x[1]);
+  return head('Dashboard Kesiswaan','Pusat pengelolaan data siswa, ketertiban, validasi, dan laporan sesuai kewenangan akun.')+
+   `<section class="ks-hero"><div><div class="eyebrow">MA KHAS KEMPEK · SISTEM KESISWAAN</div><h3>Data tertata, layanan terarah.</h3><p>Modul ini menghubungkan administrasi siswa, identitas QR, pencatatan keterlambatan, validasi, analisis, dan pelaporan dalam satu alur kerja.</p><div class="ks-access-list">${accessNames.map(x=>`<span class="ks-access">${esc(x)}</span>`).join('')}</div></div><div class="ks-mark" aria-hidden="true">✳</div></section>`+
+   `<div class="ks-grid"><div class="ks-stat"><small>DATA SISWA</small><strong id="ks-count-students">—</strong><span>Jumlah data yang dapat diakses akun ini</span></div><div class="ks-stat"><small>IDENTITAS QR</small><strong id="ks-count-qr">—</strong><span>QR aktif yang dapat diakses akun ini</span></div><div class="ks-stat"><small>CATATAN KETERLAMBATAN</small><strong id="ks-count-late">—</strong><span>Catatan sesuai batas akses akun ini</span></div></div>`+
+   `<div class="portal-grid"><section class="glass"><h3>Alur kerja Kesiswaan</h3><div class="gap">${row('01 · Operasional','OSIS melakukan pemindaian QR atau pencatatan manual.')}${row('02 · Administrasi','Komisi B mengelola data siswa, QR, dan validasi catatan.')}${row('03 · Evaluasi','Komisi D mengolah data menjadi analisis dan rekomendasi.')}${row('04 · Pengawasan','Pembina, Waka, dan pimpinan melihat laporan sesuai kewenangan.')}</div></section><section class="glass"><h3>Ruang lingkup akses</h3><p class="portal-note">Akses halaman dan data ditentukan oleh pemeriksaan fungsi Supabase serta kebijakan RLS. Tampilan portal tidak menjadi pengganti pemeriksaan keamanan di database.</p><div id="ks-access-summary" class="ks-note">${accessNames.length?'Akun ini telah dikenali oleh pemeriksaan akses Kesiswaan.':'Akun ini belum memiliki penugasan akses Kesiswaan.'}</div></section></div>`+
+   `<p class="portal-note">Dashboard tahap awal. Menu Data Siswa, Administrasi QR, Scanner, Validasi, Analisis, dan Laporan akan diaktifkan bertahap setelah setiap alur diuji.</p>`;
+ }
+ async function bindKesiswaanDashboard(){
+  const a=member.kesiswaanAccess||{}; if(!mpkSupabase)return;
+  const setCount=(id,value)=>{const el=main.querySelector('#'+id);if(el)el.textContent=value==null?'—':Number(value).toLocaleString('id-ID')};
+  const count=async(table,id,allowed)=>{if(!allowed){setCount(id,'—');return;}try{const {count,error}=await mpkSupabase.from(table).select('id',{count:'exact',head:true});if(error)throw error;setCount(id,count??0)}catch(e){console.warn('Kesiswaan count '+table+':',e.message);setCount(id,'—')}};
+  await Promise.all([
+   count('siswa_master','ks-count-students',a.admin||a.komisi_b),
+   count('siswa_qr','ks-count-qr',a.admin||a.komisi_b),
+   count('catatan_keterlambatan','ks-count-late',a.admin||a.komisi_b||a.komisi_c||a.komisi_d||a.pembina||a.waka)
+  ]);
+ }
+
+ const navGroups=[['Ruang Pribadi',[0,1,7,20]],['Organisasi',[2,3,4,5,6,8,13,15,16]],['Kolaborasi & Informasi',[10,17,14,9,21,22,23,24,18,25]],['Pengelolaan Sistem',[11,12,19]],['Kesiswaan',[26]]];
  navGroups.forEach(([label,indices])=>{const heading=document.createElement('div');heading.className='nav-group-label';heading.textContent=label;nav.appendChild(heading);indices.forEach(i=>{const b=document.createElement('button');b.type='button';b.dataset.navIndex=String(i);b.textContent=menu[i];b.addEventListener('click',()=>show(i));nav.appendChild(b)})});
  const loginForm=document.getElementById('pl-login-form');
  const loginStatus=document.getElementById('pl-login-status');
@@ -2989,11 +3029,15 @@ function show(i){if(i===19&&member.role!=='super_admin')return;clearInterval(car
   const {data:actualRole,error:roleError}=await mpkSupabase.rpc('get_my_role');
   if(!roleError)member.role=typeof actualRole==='string'?actualRole:(actualRole?.role||'anggota');
   member.isLeadership=['super_admin','ketua'].includes(member.role);
+  // Hak Kesiswaan selalu dibaca dari fungsi otorisasi database, bukan dari teks jabatan profil.
+  const ksChecks=[['admin','kesiswaan_is_admin'],['komisi_b','kesiswaan_is_komisi_b'],['komisi_c','kesiswaan_is_komisi_c'],['komisi_d','kesiswaan_is_komisi_d'],['operator','kesiswaan_is_operator'],['pembina','kesiswaan_is_pembina'],['waka','kesiswaan_is_waka'],['pimpinan','kesiswaan_is_pimpinan_mpk']];
+  const ksResults=await Promise.all(ksChecks.map(async([key,fn])=>{try{const {data,error}=await mpkSupabase.rpc(fn);if(error)throw error;return [key,data===true]}catch(err){console.warn('Pemeriksaan akses Kesiswaan '+fn+':',err.message);return [key,false]}}));
+  member.kesiswaanAccess=Object.fromEntries(ksResults);
   const topName=document.getElementById('pl-topbar-name'),topRole=document.getElementById('pl-topbar-role'),topAvatar=document.getElementById('pl-topbar-avatar');
   if(topName)topName.textContent=member.name;if(topRole)topRole.textContent=(member.position||member.role)+' · '+(member.commission||'Komisi —');if(topAvatar)topAvatar.textContent=(member.name||'MP').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
   const {data:canManageMading,error:madingAccessError}=await mpkSupabase.rpc('can_manage_mading');
   const madingNav=nav.querySelector('[data-nav-index="18"]');if(madingNav)madingNav.hidden=!!madingAccessError||canManageMading!==true;
-  const memberManageNav=nav.querySelector('[data-nav-index="19"]');if(memberManageNav)memberManageNav.hidden=member.role!=='super_admin'; const komNav=nav.querySelector('[data-nav-index="'+menu.indexOf('Komisi Saya')+'"]');if(komNav)komNav.hidden=false;
+  const memberManageNav=nav.querySelector('[data-nav-index="19"]');if(memberManageNav)memberManageNav.hidden=member.role!=='super_admin'; const ksNav=nav.querySelector('[data-nav-index="26"]');if(ksNav)ksNav.hidden=!Object.values(member.kesiswaanAccess||{}).some(Boolean); const komNav=nav.querySelector('[data-nav-index="'+menu.indexOf('Komisi Saya')+'"]');if(komNav)komNav.hidden=false;
   login.hidden=true;app.hidden=false;
   show(0);
   document.dispatchEvent(new CustomEvent('mpk:dashboard-ready'));
