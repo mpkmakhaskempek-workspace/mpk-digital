@@ -2801,7 +2801,7 @@ function show(i){if(i===19&&member.role!=='super_admin')return;clearInterval(car
   });
   draw();
  }
- function bindPage(i){if(__UP[i]){__UP[i]();return} if(i===26)bindKesiswaanDashboard(); if(i===27)bindKesiswaanSiswa(); 
+ function bindPage(i){if(__UP[i]){__UP[i]();return} if(i===26)bindKesiswaanDashboard(); if(i===27)bindKesiswaanSiswa(); if(i===28)bindKesiswaanQR(); 
   if(i===0)main.querySelectorAll('[data-dashboard-go]').forEach(b=>b.addEventListener('click',()=>show(Number(b.dataset.dashboardGo))));
   if(i===21)bindInternalDiscussion();
   if(i===24)bindAIAssistant();
@@ -3051,7 +3051,50 @@ function show(i){if(i===19&&member.role!=='super_admin')return;clearInterval(car
   await loadClasses();await load();
  }
 
- const navGroups=[['Ruang Pribadi',[0,1,7,20]],['Organisasi',[2,3,4,5,6,8,13,15,16]],['Kolaborasi & Informasi',[10,17,14,9,21,22,23,24,18,25]],['Pengelolaan Sistem',[11,12,19]],['Kesiswaan',[26,27]]];
+
+ // === ADMINISTRASI QR SISWA: tahap baca, pencarian, dan pemeriksaan status ===
+ menu.push('Administrasi QR Siswa');
+ views.push(()=>kesiswaanQRView());
+ function kesiswaanQRView(){
+  const a=member.kesiswaanAccess||{};
+  if(!(a.admin||a.komisi_b))return head('Administrasi QR Siswa','Pengelolaan identitas QR siswa sesuai kewenangan akun.')+`<section class="glass"><h3>Akses tidak tersedia</h3><p class="portal-note">Administrasi QR hanya tersedia untuk Super Admin dan Komisi B.</p></section>`;
+  return head('Administrasi QR Siswa','Pemeriksaan identitas QR yang terhubung dengan data induk siswa.')+
+   `<section id="mpk-qr-module"><div class="glass"><div class="eyebrow">ADMINISTRASI IDENTITAS</div><h3>Daftar Identitas QR</h3><p class="portal-note">Tahap ini hanya untuk melihat dan memeriksa data. Token QR tidak ditampilkan di daftar dan belum ada tindakan membuat, mengganti, atau menonaktifkan QR.</p><form id="ks-qr-filter" class="ks-toolbar"><label>Cari nama / NIS / ID aplikasi<input id="ks-qr-q" type="search" maxlength="80" placeholder="Ketik identitas siswa..."></label><label>Kelas saat ini<select id="ks-qr-class"><option value="">Semua kelas</option></select></label><label>Status QR<select id="ks-qr-status"><option value="all">Semua QR</option><option value="active">Aktif</option><option value="inactive">Tidak aktif</option></select></label><button class="btn p" type="submit">Terapkan</button></form></div><div class="portal-grid" id="ks-qr-stats">${stat('—','Hasil ditemukan','Memuat data')}${stat('—','QR aktif','Identitas aktif')}${stat('50','Baris per halaman','Batas tampilan')}</div><section class="glass"><div id="ks-qr-feedback" class="portal-note" role="status" aria-live="polite">Memuat identitas QR...</div><div class="ks-table-wrap"><table><thead><tr><th>Nama siswa</th><th>NIS</th><th>Kelas</th><th>Status QR</th><th>Dibuat pada</th><th></th></tr></thead><tbody id="ks-qr-rows"><tr><td colspan="6">Memuat...</td></tr></tbody></table></div><div class="ks-pagination" style="margin-top:1rem"><span id="ks-qr-page-label" class="ks-muted">Halaman 1</span><div style="display:flex;gap:.5rem"><button class="btn up" id="ks-qr-prev" type="button" disabled>Sebelumnya</button><button class="btn up" id="ks-qr-next" type="button">Berikutnya</button></div></div></section><section class="ks-detail" id="ks-qr-detail" hidden><div class="eyebrow">RINCIAN IDENTITAS QR</div><h3 id="ks-qr-detail-name">—</h3><div class="ks-detail-grid" id="ks-qr-detail-grid"></div></section></section>`;
+ }
+ async function bindKesiswaanQR(){
+  const root=main.querySelector('#mpk-qr-module'),a=member.kesiswaanAccess||{};
+  if(!root||!(a.admin||a.komisi_b)||!mpkSupabase)return;
+  const $=id=>root.querySelector('#'+id),pageSize=50;let page=0,total=0,activeTotal='—',lastRows=[];
+  const safe=v=>esc(v==null||v===''?'—':String(v));
+  const feedback=$('ks-qr-feedback'),tbody=$('ks-qr-rows'),prev=$('ks-qr-prev'),next=$('ks-qr-next');
+  const loadClasses=async()=>{try{let values=[],start=0;while(true){const {data,error}=await mpkSupabase.from('siswa_master').select('kelas_saat_ini').not('kelas_saat_ini','is',null).order('kelas_saat_ini').range(start,start+999);if(error)throw error;const batch=data||[];values.push(...batch.map(x=>String(x.kelas_saat_ini||'').trim()).filter(Boolean));if(batch.length<1000)break;start+=1000;}const unique=[...new Set(values)].sort((x,y)=>x.localeCompare(y,'id',{numeric:true,sensitivity:'base'}));$('ks-qr-class').innerHTML='<option value="">Semua kelas</option>'+unique.map(v=>`<option value="${safe(v)}">${safe(v)}</option>`).join('')}catch(e){console.warn('Kelas QR:',e.message)}};
+  const showDetail=row=>{const panel=$('ks-qr-detail');panel.hidden=false;$('ks-qr-detail-name').textContent=row.student?.nama_lengkap||'Detail identitas QR';const created=row.dibuat_pada?new Date(row.dibuat_pada).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'}):'—';const fields=[['NIS',row.student?.nis],['ID aplikasi',row.student?.id_aplikasi],['Kelas',row.student?.kelas_saat_ini],['Status siswa',row.student?.aktif?'Aktif':'Tidak aktif'],['Status QR',row.aktif?'Aktif':'Tidak aktif'],['Dibuat pada',created],['ID QR',row.id],['Token QR','Disembunyikan demi keamanan']];$('ks-qr-detail-grid').innerHTML=fields.map(([k,v])=>`<div><small>${safe(k)}</small><b>${safe(v)}</b></div>`).join('');panel.scrollIntoView({behavior:'smooth',block:'nearest'})};
+  const load=async()=>{
+   feedback.textContent='Memuat identitas QR...';tbody.innerHTML='<tr><td colspan="6">Memuat...</td></tr>';prev.disabled=true;next.disabled=true;
+   try{
+    let studentQuery=mpkSupabase.from('siswa_master').select('id,nama_lengkap,nis,id_aplikasi,kelas_saat_ini,aktif');
+    const term=$('ks-qr-q').value.trim().replace(/[^a-zA-Z0-9À-ÿ _-]/g,' ').replace(/\s+/g,' ').slice(0,80);
+    if(term)studentQuery=studentQuery.or(`nama_lengkap.ilike.%${term}%,nis.ilike.%${term}%,id_aplikasi.ilike.%${term}%`);
+    const cls=$('ks-qr-class').value;if(cls)studentQuery=studentQuery.eq('kelas_saat_ini',cls);
+    const {data:students,error:studentError}=await studentQuery.limit(5000);if(studentError)throw studentError;
+    const studentMap=new Map((students||[]).map(x=>[x.id,x]));const studentIds=[...studentMap.keys()];
+    let q=mpkSupabase.from('siswa_qr').select('id,siswa_id,aktif,dibuat_pada,dibuat_oleh',{count:'exact'}).order('dibuat_pada',{ascending:false});
+    const status=$('ks-qr-status').value;if(status==='active')q=q.eq('aktif',true);if(status==='inactive')q=q.eq('aktif',false);
+    if(term||cls){if(!studentIds.length){total=0;lastRows=[];draw();return;}q=q.in('siswa_id',studentIds)}
+    const from=page*pageSize,to=from+pageSize-1;const {data,error,count}=await q.range(from,to);if(error)throw error;
+    total=count||0;lastRows=(data||[]).map(r=>({...r,student:studentMap.get(r.siswa_id)||null}));
+    // If no student filter was applied, fetch the matching student details for this QR page only.
+    const missingIds=[...new Set(lastRows.filter(r=>!r.student).map(r=>r.siswa_id))];
+    if(missingIds.length){const {data:more,error:moreError}=await mpkSupabase.from('siswa_master').select('id,nama_lengkap,nis,id_aplikasi,kelas_saat_ini,aktif').in('id',missingIds);if(moreError)throw moreError;const map=new Map((more||[]).map(x=>[x.id,x]));lastRows=lastRows.map(r=>({...r,student:r.student||map.get(r.siswa_id)||null}));}
+    draw();
+   }catch(e){console.error('Administrasi QR:',e);feedback.textContent='Data QR belum dapat dimuat: '+(e.message||'Kesalahan tidak diketahui')+' Periksa hak akses dan kebijakan RLS.';tbody.innerHTML='<tr><td colspan="6">Data belum tersedia.</td></tr>';}
+  };
+  const draw=()=>{$('ks-qr-stats').innerHTML=[stat(total.toLocaleString('id-ID'),'Hasil ditemukan','Sesuai pencarian dan filter'),stat(activeTotal==='—'?'—':Number(activeTotal).toLocaleString('id-ID'),'QR aktif','Jumlah identitas QR aktif'),stat(pageSize,'Baris per halaman','Batas tampilan')].join('');tbody.innerHTML=lastRows.length?lastRows.map((r,i)=>{const created=r.dibuat_pada?new Date(r.dibuat_pada).toLocaleDateString('id-ID'):'—';return `<tr><td><b>${safe(r.student?.nama_lengkap||'Siswa tidak ditemukan')}</b><small>${safe(r.student?.id_aplikasi)}</small></td><td>${safe(r.student?.nis)}</td><td>${safe(r.student?.kelas_saat_ini)}</td><td><span class="ks-status${r.aktif?'':' off'}">${r.aktif?'Aktif':'Tidak aktif'}</span></td><td>${safe(created)}</td><td><button class="btn up" type="button" data-ks-qr-detail="${i}">Detail</button></td></tr>`}).join(''):'<tr><td colspan="6">Tidak ada identitas QR yang cocok dengan filter.</td></tr>';feedback.textContent=`Menampilkan ${lastRows.length?page*pageSize+1:0}–${Math.min(page*pageSize+lastRows.length,total)} dari ${total.toLocaleString('id-ID')} identitas QR.`;$('ks-qr-page-label').textContent=`Halaman ${total?page+1:0} dari ${Math.max(1,Math.ceil(total/pageSize))}`;prev.disabled=page===0;next.disabled=(page+1)*pageSize>=total;};
+  $('ks-qr-filter').addEventListener('submit',e=>{e.preventDefault();page=0;load()});prev.addEventListener('click',()=>{if(page>0){page--;load()}});next.addEventListener('click',()=>{if((page+1)*pageSize<total){page++;load()}});tbody.addEventListener('click',e=>{const b=e.target.closest('[data-ks-qr-detail]');if(b){const row=lastRows[Number(b.dataset.ksQrDetail)];if(row)showDetail(row)}});
+  await loadClasses();try{const {count,error}=await mpkSupabase.from('siswa_qr').select('id',{count:'exact',head:true}).eq('aktif',true);if(error)throw error;activeTotal=count??0}catch(e){console.warn('Jumlah QR aktif:',e.message)}await load();
+ }
+
+ const navGroups=[['Ruang Pribadi',[0,1,7,20]],['Organisasi',[2,3,4,5,6,8,13,15,16]],['Kolaborasi & Informasi',[10,17,14,9,21,22,23,24,18,25]],['Pengelolaan Sistem',[11,12,19]],['Kesiswaan',[26,27,28]]];
  navGroups.forEach(([label,indices])=>{const heading=document.createElement('div');heading.className='nav-group-label';heading.textContent=label;nav.appendChild(heading);indices.forEach(i=>{const b=document.createElement('button');b.type='button';b.dataset.navIndex=String(i);b.textContent=menu[i];b.addEventListener('click',()=>show(i));nav.appendChild(b)})});
  const loginForm=document.getElementById('pl-login-form');
  const loginStatus=document.getElementById('pl-login-status');
@@ -3073,7 +3116,7 @@ function show(i){if(i===19&&member.role!=='super_admin')return;clearInterval(car
   if(topName)topName.textContent=member.name;if(topRole)topRole.textContent=(member.position||member.role)+' · '+(member.commission||'Komisi —');if(topAvatar)topAvatar.textContent=(member.name||'MP').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
   const {data:canManageMading,error:madingAccessError}=await mpkSupabase.rpc('can_manage_mading');
   const madingNav=nav.querySelector('[data-nav-index="18"]');if(madingNav)madingNav.hidden=!!madingAccessError||canManageMading!==true;
-  const memberManageNav=nav.querySelector('[data-nav-index="19"]');if(memberManageNav)memberManageNav.hidden=member.role!=='super_admin'; const ksNav=nav.querySelector('[data-nav-index="26"]');if(ksNav)ksNav.hidden=!Object.values(member.kesiswaanAccess||{}).some(Boolean); const komNav=nav.querySelector('[data-nav-index="'+menu.indexOf('Komisi Saya')+'"]');if(komNav)komNav.hidden=false;
+  const memberManageNav=nav.querySelector('[data-nav-index="19"]');if(memberManageNav)memberManageNav.hidden=member.role!=='super_admin'; const ksNav=nav.querySelector('[data-nav-index="26"]');if(ksNav)ksNav.hidden=!Object.values(member.kesiswaanAccess||{}).some(Boolean); const qrNav=nav.querySelector('[data-nav-index="28"]');if(qrNav)qrNav.hidden=!(member.kesiswaanAccess?.admin||member.kesiswaanAccess?.komisi_b); const komNav=nav.querySelector('[data-nav-index="'+menu.indexOf('Komisi Saya')+'"]');if(komNav)komNav.hidden=false;
   login.hidden=true;app.hidden=false;
   show(0);
   document.dispatchEvent(new CustomEvent('mpk:dashboard-ready'));
