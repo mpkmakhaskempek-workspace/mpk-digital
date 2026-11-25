@@ -1659,6 +1659,9 @@ nav a{position:relative}nav a::after{content:"";position:absolute;left:0;right:0
             <button type="button" id="btn-toggle-play" class="rounded-full border border-[#e3b341]/40 bg-[#04130e]/75 px-3.5 py-1.5 text-xs font-semibold text-[#e3b341] backdrop-blur-md transition hover:bg-[#e3b341] hover:text-[#04130e]">
               Jeda Orasi
             </button>
+            <button type="button" id="btn-toggle-orasi-audio" aria-pressed="false" class="rounded-full border border-emerald-400/40 bg-[#04130e]/75 px-3.5 py-1.5 text-xs font-semibold text-emerald-200 backdrop-blur-md transition hover:border-emerald-300">
+              🔊 Aktifkan Suara
+            </button>
             <button type="button" id="btn-next-orasi" class="rounded-full border border-[#e3b341]/40 bg-[#04130e]/75 px-3.5 py-1.5 text-xs font-semibold text-[#eaf5ef] backdrop-blur-md transition hover:border-[#e3b341]">
               Orasi Berikutnya &rarr;
             </button>
@@ -3944,67 +3947,10 @@ place();size();if(!calm)loop();
         }
       ];
 
-      const defaultAspirasi = [
-        {
-          id: 1,
-          nama: 'Santri Kelas XI',
-          kelas: 'XI IPA 1',
-          kategori: 'Fasilitas',
-          judul: 'Penambahan kipas angin & ventilasi di ruang baca',
-          isi: 'Saat siang hari ruang baca terasa cukup pengap sehingga konsentrasi belajar menurun. Mohon penambahan 2 unit kipas dinding.',
-          status: 'Ditindaklanjuti',
-          votes: 34,
-          voted: false
-        },
-        {
-          id: 2,
-          nama: 'Anonim',
-          kelas: 'XII IPS',
-          kategori: 'Akademik',
-          judul: 'Jam buka perpustakaan diperpanjang setelah Ashar',
-          isi: 'Banyak siswa butuh referensi kitab dan buku paket untuk persiapan ujian setelah kegiatan sore.',
-          status: 'Dikaji Komisi',
-          votes: 28,
-          voted: false
-        },
-        {
-          id: 3,
-          nama: 'Rifqi & Tim',
-          kelas: 'X-3',
-          kategori: 'Kegiatan',
-          judul: 'Adakan panggung dialektika & bedah buku bulanan',
-          isi: 'Agar tradisi menulis dan berorasi santri MA KHAS Kempek semakin hidup dan terarah.',
-          status: 'Diterima',
-          votes: 21,
-          voted: false
-        },
-        {
-          id: 4,
-          nama: 'Anonim',
-          kelas: '-',
-          kategori: 'Kebijakan',
-          judul: 'Transparansi jadwal penggunaan lapangan olahraga',
-          isi: 'Perlu papan jadwal mingguan agar tidak terjadi bentrok antar ekstrakurikuler saat latihan sore.',
-          status: 'Ditindaklanjuti',
-          votes: 19,
-          voted: false
-        }
-      ];
-
-      let aspirasiList = defaultAspirasi.slice();
-      try {
-        const saved = localStorage.getItem('mpk_aspirasi_list_v1');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) aspirasiList = parsed;
-        }
-      } catch (e) {}
-
-      function saveAspirasi() {
-        try {
-          localStorage.setItem('mpk_aspirasi_list_v1', JSON.stringify(aspirasiList));
-        } catch (e) {}
-      }
+      // Papan Suara hanya menampilkan aspirasi yang telah diterbitkan Komisi A.
+      // Data contoh lokal sengaja dinonaktifkan agar tidak tercampur dengan data asli.
+      let aspirasiList = [];
+      function saveAspirasi() {}
 
       // Navigation Tabs
       const tabs = document.querySelectorAll('.nav-tab');
@@ -4061,10 +4007,48 @@ place();size();if(!calm)loop();
       const transcriptCrowd = document.getElementById('transcript-crowd');
       const btnTogglePlay = document.getElementById('btn-toggle-play');
       const btnNextOrasi = document.getElementById('btn-next-orasi');
+      const btnToggleOrasiAudio = document.getElementById('btn-toggle-orasi-audio');
 
       let currentIndex = 0;
       let isPlaying = true;
+      let orasiAudioEnabled = false;
       let timers = [];
+
+      // Suara orator menggunakan text-to-speech bawaan browser; tidak mengunduh audio eksternal.
+      function speakCurrentOration() {
+        if (!orasiAudioEnabled || !('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const item = orasiData[currentIndex];
+        const spokenText = String(item.orator || '').replace(/[“”"']/g, '').trim();
+        if (!spokenText) return;
+        const utterance = new SpeechSynthesisUtterance(spokenText);
+        utterance.lang = 'id-ID';
+        utterance.rate = 0.88;
+        utterance.pitch = 0.82;
+        utterance.volume = 1;
+        const voices = window.speechSynthesis.getVoices();
+        const indonesianVoice = voices.find((voice) => /^id(-|_)/i.test(voice.lang));
+        if (indonesianVoice) utterance.voice = indonesianVoice;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      btnToggleOrasiAudio.addEventListener('click', () => {
+        orasiAudioEnabled = !orasiAudioEnabled;
+        btnToggleOrasiAudio.setAttribute('aria-pressed', String(orasiAudioEnabled));
+        btnToggleOrasiAudio.textContent = orasiAudioEnabled ? '🔇 Matikan Suara' : '🔊 Aktifkan Suara';
+        btnToggleOrasiAudio.classList.toggle('border-emerald-300', orasiAudioEnabled);
+        if (orasiAudioEnabled) {
+          if (!('speechSynthesis' in window)) {
+            orasiAudioEnabled = false;
+            btnToggleOrasiAudio.setAttribute('aria-pressed', 'false');
+            btnToggleOrasiAudio.textContent = 'Suara tidak didukung';
+            return;
+          }
+          speakCurrentOration();
+        } else if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+      });
 
       function clearTimers() {
         timers.forEach((t) => clearTimeout(t));
@@ -4081,6 +4065,7 @@ place();size();if(!calm)loop();
         hideAllBubbles();
 
         const item = orasiData[currentIndex];
+        speakCurrentOration();
         oratorText.textContent = item.orator;
         oratorAuthor.textContent = item.author;
         item.crowd.forEach((txt, idx) => {
@@ -4133,6 +4118,7 @@ place();size();if(!calm)loop();
           runOrasiCycle();
         } else {
           clearTimers();
+          if ('speechSynthesis' in window) window.speechSynthesis.cancel();
           btnTogglePlay.textContent = 'Lanjut Orasi';
           stageEl.classList.remove('is-speaking');
           stageStatus.textContent = 'Orasi dijeda';
@@ -4182,11 +4168,8 @@ place();size();if(!calm)loop();
                 <p class="mt-1.5 text-sm leading-relaxed text-[#9ec0b1]">${escapeHtml(item.isi)}</p>
               </div>
               <div class="mt-4 flex items-center justify-between border-t border-[#e3b341]/15 pt-3">
-                <span class="text-xs text-[#9ec0b1]">${escapeHtml(item.nama)}${item.kelas && item.kelas !== '-' ? ' · ' + escapeHtml(item.kelas) : ''}</span>
-                <button type="button" data-vote-id="${item.id}" class="vote-btn inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-bold transition ${voteActive}">
-                  <span>&#9650;</span>
-                  <span>Dukung (${item.votes})</span>
-                </button>
+                <span class="text-xs text-[#9ec0b1]">${item.isPublic ? 'Dipublikasikan oleh Komisi A' : escapeHtml(item.nama)}${!item.isPublic && item.kelas && item.kelas !== '-' ? ' · ' + escapeHtml(item.kelas) : ''}</span>
+                ${item.isPublic ? '<span class="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-200">✓ Terbit di Mading</span>' : `<button type="button" data-vote-id="${item.id}" class="vote-btn inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-bold transition ${voteActive}"><span>&#9650;</span><span>Dukung (${item.votes})</span></button>`}
               </div>
             </article>
           `;
@@ -4204,6 +4187,44 @@ place();size();if(!calm)loop();
           });
         });
       }
+
+      async function loadPublishedAspirations() {
+        const listEl = document.getElementById('aspirasi-list');
+        const countEl = document.getElementById('count-badge');
+        if (!listEl) return;
+        const client = window.mpkSupabase;
+        if (!client) {
+          listEl.innerHTML = '<div class="rd-glass col-span-full rounded-2xl border border-[#e3b341]/25 p-6 text-center text-sm text-[#9ec0b1]">Koneksi data belum tersedia. Muat ulang halaman beberapa saat lagi.</div>';
+          return;
+        }
+        listEl.innerHTML = '<div class="rd-glass col-span-full rounded-2xl border border-[#e3b341]/25 p-6 text-center text-sm text-[#9ec0b1]">Memuat aspirasi yang telah diterbitkan…</div>';
+        try {
+          const { data, error } = await client
+            .from('mading_aspirasi_publik')
+            .select('id,judul,isi,kategori,created_at,diterbitkan_pada')
+            .order('diterbitkan_pada', { ascending: false });
+          if (error) throw error;
+          aspirasiList = (data || []).map((x) => ({
+            id: 'pub-' + x.id,
+            nama: 'Publikasi Komisi A',
+            kelas: '-',
+            kategori: x.kategori || 'Umum',
+            judul: x.judul,
+            isi: x.isi,
+            status: 'Diterbitkan',
+            votes: 0,
+            voted: false,
+            isPublic: true,
+            publishedAt: x.diterbitkan_pada || x.created_at
+          }));
+          renderAspirasi();
+        } catch (err) {
+          console.error('Gagal memuat Papan Suara dari Supabase:', err);
+          if (countEl) countEl.textContent = '—';
+          listEl.innerHTML = '<div class="rd-glass col-span-full rounded-2xl border border-amber-400/30 p-6 text-center text-sm text-[#f4d28a]">Papan Suara belum dapat memuat data. Periksa izin SELECT pada view mading_aspirasi_publik dan koneksi Supabase, lalu muat ulang.</div>';
+        }
+      }
+      loadPublishedAspirations();
 
       function escapeHtml(str) {
         return String(str)
